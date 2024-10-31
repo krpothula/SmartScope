@@ -197,3 +197,6 @@ class FakeScopeInterface(MicroscopeInterface):
 
     def set_apertures_for_lowmag(self):
         pass
+
+    def set_focus_for_bis_tilt(self,isY,tiltAngle):
+        pass
