@@ -28,6 +28,15 @@ def register_to_other_montage(
     centered_pixel_coords = pixel_coords + montage.center
     return centered_pixel_coords
 
+def register_to_other_montage_from_vectors(stage_coords,center_stage_coords,montage):
+    centered_stage_coords = stage_coords - center_stage_coords
+    recentered_stage_coords = centered_stage_coords + np.array(montage.metadata.iloc[-1].StagePosition)
+    logger.debug(f'Rencentered stage coordinates: {recentered_stage_coords}. \nShape: {recentered_stage_coords.shape}')
+    pixel_coords = np.apply_along_axis(ProcessImage.pixel_to_stage_from_vectors,1, recentered_stage_coords, montage.metadata.iloc[-1].StageToImageMatrix)
+    pixel_coords[:, 1] = montage.shape_x - pixel_coords[:, 1]  #np.array([pixel_coords[:,0],montage.shape_x - pixel_coords[:,1]])
+    return pixel_coords
+    
+
 def register_stage_to_montage(
         targets_stage_coords:np.ndarray,
         center_stage_coords:np.ndarray,

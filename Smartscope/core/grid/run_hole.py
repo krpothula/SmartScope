@@ -10,7 +10,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 from .finders import find_targets
-from .transformations import register_to_other_montage, register_targets_by_proximity
+from .transformations import register_to_other_montage, register_targets_by_proximity, register_to_other_montage_from_vectors
 from .diagnostics import generate_diagnostic_figure, Timer
 
 
@@ -75,7 +75,10 @@ class RunHole:
                 working_dir=hole.grid_id.directory
             )
             square_montage.load_or_process()
-            image_coords = register_to_other_montage(np.array([x.coords for x in hole_group]),hole.coords, montage, square_montage)
+            if 'StageToImageMatrix' in montage.metadata.iloc[-1].keys() and not FORCE_MDOC_TARGETING:
+                image_coords = register_to_other_montage_from_vectors(np.array([x.stage_coords for x in hole_group]),hole.stage_coords, montage)
+            else:    
+                image_coords = register_to_other_montage(np.array([x.coords for x in hole_group]),hole.coords, montage, square_montage)
             timer.report_timer('Initial registration to the higher mag image')
             targets = []
             if protocol.targets.reregister:
