@@ -235,6 +235,7 @@ class SerialemInterface(MicroscopeInterface):
         while True:
             self.logger.info('Running square realignment')
             sem.Search()
+            sem.Delay(0.2, 's')
             square, shape_x, shape_y, _, _, _ = self.buffer_to_numpy()
             _, square_center, _ = find_square(square)
             im_center = (square.shape[1] // 2, square.shape[0] // 2)
