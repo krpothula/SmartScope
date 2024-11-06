@@ -60,34 +60,37 @@ class SerialemInterface(MicroscopeInterface):
                 self.logger.info('Eucentric alignement would send the stage too far, stopping Eucentricity.')
                 break
 
-    # def eucentricity_by_beam_tilt(self, max_movement:int=200, beam_tilt_angle:int=2):
-    #     self.logger.info(f'Doing eucentric height by beam tilt')
-    #     sem.GoToLowDoseArea('V')
-    #     target_Z = sem.ReportLDDefocusOffset('V')
-    #     offsetZ = 51
-    #     iteration = 0
-    #     while abs(offsetZ) > 5 and iteration != 3:
-    #         iteration += 1
-    #         self.logger.info(f'Staring iteration {iteration}')
-    #         alignments = []
-    #         stageZ = sem.ReportStageXYZ()[2]
-    #         sem.SetBeamTilt(-beam_tilt_angle, 0)
-    #         sem.View()
-    #         sem.SetBeamTilt(beam_tilt_angle, 0)
-    #         sem.View()
-    #         sem.AlignTo('B', 1)
-            #CONTINUE HERE
-    #         # self.logger.debug(', '.join(alignments))
-    #         offsetZ = sum(alignments) / (len(alignments) * 1000)
-    #         totalZ = stageZ + offsetZ
-    #         if abs(totalZ) < max_movement:
-    #             self.logger.info(f'Moving by {offsetZ} um')
+    def eucentricity_by_beam_tilt(self, max_movement:int=200, beam_tilt_angle:int=2):
+        self.logger.info(f'Doing eucentric height by beam tilt')
+        sem.GoToLowDoseArea('V')
+        target_Z = -150 #sem.ReportLDDefocusOffset('V')
+        offsetZ = 51
+        iteration = 0
+        while abs(offsetZ) > 5 and iteration != 3:
+            iteration += 1
+            self.logger.info(f'Staring iteration {iteration}')
+            alignments = []
+            stageZ = sem.ReportStageXYZ()[2]
+            sem.SetBeamTilt(-beam_tilt_angle, 0)
+            sem.View()
+            sem.SetBeamTilt(beam_tilt_angle, 0)
+            sem.View()
+            sem.AlignTo('B', 1)
+            shift = sem.ReportAlignShift()[5]/1000
 
-    #             sem.MoveStage(0, 0, offsetZ)
-    #             time.sleep(0.2)
-    #         else:
-    #             self.logger.info('Eucentric alignement would send the stage too far, stopping Eucentricity.')
-    #             break        
+            # self.logger.debug(', '.join(alignments))
+            offsetZ = shift/(beam_tilt_angle*0.002) + target_Z
+            self.logger.info(f'Iteration {iteration} offset calculate to {offsetZ}')
+            # break
+            totalZ = stageZ + offsetZ
+            if abs(totalZ) < max_movement:
+                self.logger.info(f'Moving by {offsetZ} um')
+
+                sem.MoveStage(0, 0, offsetZ)
+                time.sleep(0.2)
+            else:
+                self.logger.info('Eucentric alignement would send the stage too far, stopping Eucentricity.')
+                break        
 
     def eucentricity(self):
         sem.GoToLowDoseArea('V')
@@ -181,7 +184,11 @@ class SerialemInterface(MicroscopeInterface):
         image_to_stage_matrix = np.array(sem.BufImageToStageMatrix(buffer, 1))
         image_to_stage_matrix /= np.array([binning, binning, binning, binning, 1, 1])
         image_to_stage_matrix = [str(x) for x in image_to_stage_matrix.tolist()]
+        stage_to_image_matrix = np.array(sem.StageToBufImageMatrix(buffer, 1))
+        stage_to_image_matrix /= np.array([binning, binning, binning, binning, 1, 1])
+        stage_to_image_matrix = [str(x) for x in stage_to_image_matrix.tolist()]
         sem.AddToAutodoc('ImageToStageMatrix', ' '.join(image_to_stage_matrix))
+        sem.AddToAutodoc('StageToImageMatrix', ' '.join(stage_to_image_matrix))
         sem.WriteAutodoc()
 
     def save_image(self, file:str):
@@ -228,6 +235,7 @@ class SerialemInterface(MicroscopeInterface):
         while True:
             self.logger.info('Running square realignment')
             sem.Search()
+            sem.Delay(0.2, 's')
             square, shape_x, shape_y, _, _, _ = self.buffer_to_numpy()
             _, square_center, _ = find_square(square)
             im_center = (square.shape[1] // 2, square.shape[0] // 2)
