@@ -4,12 +4,16 @@ from scipy.spatial.distance import cdist
 
 logger = logging.getLogger(__name__)
 
-def filter_closest(points,max_dist):
+def filter_closest(points,expected_dist, limit=0.2):
+
     distances = cdist(points,points)
+    # logger.debug(f'Distance matrix for {points} = \n{distances}')
     out_points = []
     dists = []
     for ind,row in enumerate(distances):
-        indexes= [i[1] for i in np.argwhere([row > 0, row < max_dist]) if i[0] ==1 and i[1] != ind]
+        filter_argwhere = np.argwhere([row > expected_dist*(1-limit), row < expected_dist*(1+limit)])
+        # logger.debug(f'Argwhere result for {row} = {filter_argwhere} ')
+        indexes= [i[1] for i in filter_argwhere if i[0] ==1 and i[1] != ind]
         filtered = points[indexes,:] - points[ind]
         out_points.extend(filtered)
         dists.extend(row.copy()[indexes])
@@ -88,7 +92,7 @@ def get_average_angle(points):
 def get_mesh_rotation_spacing(targets, mesh_spacing_in_pixels):
     # grid = AutoloaderGrid.objects.get(pk=grid_id)
     # print(f'Finding points within {mesh_spacing_in_pixels} pixels.')
-    filtered_points, spacing= filter_closest(targets, mesh_spacing_in_pixels*1.08)
+    filtered_points, spacing= filter_closest(targets, mesh_spacing_in_pixels)
     logger.debug(f'Calculated mean spacing: {spacing} pixels')
     rotation = get_average_angle(filtered_points)
     logger.debug(f'Calculated mesh rotation: {rotation} degrees')

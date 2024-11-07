@@ -84,19 +84,19 @@ def get_mesh_rotation(grid:AutoloaderGrid, level:Callable=hole_mesh, algo:Callab
 
 def calculate_hole_geometry(grid:AutoloaderGrid):
     targets, mesh_spacing = hole_mesh(grid)
-    
-    # coords = np.array([t.coords for t in targets])
     pixel_size = targets[0].parent.pixel_size
     expected_spacing = mesh_spacing / pixel_size * 10_000
     logger.debug(f'Calculating hole geometry for grid {grid} with {len(targets)} holes and mesh spacing: {mesh_spacing} um. Pixel size of {targets[0].parent}: {pixel_size} A.')
-    # targets.sort(key=lambda x: x.parent)
+    targets.sort(key=lambda x: x.parent.pk)
     grouped_items = []
-    for _, group in groupby(targets, key=lambda x: x.parent):
-        grouped_items.append(np.array([t.coords for t in list(group)]))
+    for _, group in groupby(targets, key=lambda x: x.parent.pk):
+        grouped_items.append(np.array([t.coords for t in group]))
     logger.debug(f'Grouped items in {len(grouped_items)} groups.')
     rotations, spacings = [],[]
     for i, group in enumerate(grouped_items):
-        logger.debug(f'Calculating rotation and spacing for group with group{i} containing {len(group)} holes.')
+        if len(group) < 2:
+            continue
+        logger.debug(f'Calculating rotation and spacing for group {i} containing {len(group)} holes.')
         rotation, spacing = get_mesh_rotation_spacing(group, expected_spacing)
         rotations.append(rotation)
         spacings.append(spacing)
