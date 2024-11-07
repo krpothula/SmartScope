@@ -410,16 +410,19 @@ def import_grid(file:str, group:str='', user:str=''):
     print('Done.')
 
 
-def extend_lattice(square_id):
+def extend_lattice(square_id, force_recalculate='False'):
     from Smartscope.core.models import SquareModel
     from Smartscope.lib.Datatypes.grid_geometry import GridGeometry, GridGeometryLevel
     from Smartscope.core.mesh_rotation import calculate_hole_geometry
     from Smartscope.lib.Finders.lattice_extension import lattice_extension
     from Smartscope.lib.image.montage import Montage
+    force_recalculate = eval(force_recalculate)
     square = SquareModel.objects.get(pk=square_id)
     grid = square.grid_id
-    geometry = GridGeometry.load(directory=grid.directory)
-    rotation, spacing = geometry.get_geometry(level=GridGeometryLevel.SQUARE)
+    rotation, spacing = None, None
+    if not force_recalculate:
+        geometry = GridGeometry.load(directory=grid.directory)
+        rotation, spacing = geometry.get_geometry(level=GridGeometryLevel.SQUARE)
     if any([rotation is None, spacing is None]):
         rotation, spacing = calculate_hole_geometry(grid)
     montage = Montage(name=square.name, working_dir=grid.directory)
