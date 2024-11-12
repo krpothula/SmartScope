@@ -151,11 +151,11 @@ class GridCollectionParamsForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['target_defocus_min'].widget.attrs.update({
             "max": 0,
-            "step": 0.1
+            "step": 0.05
         })
         self.fields['target_defocus_max'].widget.attrs.update({
             "max": 0,
-            "step": 0.1
+            "step": 0.05
         })
         self.fields['step_defocus'].widget.attrs.update({
             "min": 0,

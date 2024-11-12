@@ -97,9 +97,13 @@ def calculate_hole_geometry(grid:AutoloaderGrid):
         if len(group) < 2:
             continue
         logger.debug(f'Calculating rotation and spacing for group {i} containing {len(group)} holes.')
-        rotation, spacing = get_mesh_rotation_spacing(group, expected_spacing)
-        rotations.append(rotation)
-        spacings.append(spacing)
+        try:
+            rotation, spacing = get_mesh_rotation_spacing(group, expected_spacing)
+            rotations.append(rotation)
+            spacings.append(spacing)
+        except np.exceptions.AxisError:
+            logger.debug(f'Skipping {group} because not enough hole close to each others.')
+            continue
     logger.debug(f'Calculated rotations: {rotations} degrees and spacings: {spacings} pixels. Expected spacing: {expected_spacing:.2f} pixels.')
     rotation = np.mean(rotations)
     spacing = np.mean(spacings)
