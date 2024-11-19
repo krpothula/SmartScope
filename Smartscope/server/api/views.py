@@ -171,7 +171,8 @@ class SidePanel(APIView):
         if group is not None and (user.is_staff or user.groups.filter(pk=group).exists()):
             # if group is not None:
             group = Group.objects.get(pk=group)
-            items = list(ScreeningSession.objects.filter(group=group).order_by('-creation_time'))
+            items = list(ScreeningSession.objects.filter(group=group))
+            items.sort(key=lambda x: x.creation_time, reverse=True)
             nextsection = 'sidebarGrids'
             field = 'session_id'
 
