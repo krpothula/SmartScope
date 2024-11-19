@@ -407,6 +407,47 @@ class ScreeningSessionsViewSet(viewsets.ModelViewSet, GeneralActionsMixin,):
             os.path.join('/tmp/', f'{self.object.microscope_id.pk}.lock')], communicate=True)
         logger.info(f'OUTPUT: {out}\nERROR: {err}')
         return Response(dict(out=out, err=err))
+    
+    @action(detail=True, methods=['get'])
+    def download_logs(self, request, pk=None):
+        """
+        Handles the download of specific log files ('run.out' or 'proc.out') 
+        for a given session. The file type is determined by the 'file_type' 
+        parameter in the request. If the file exists, it is served as an 
+        attachment for download; otherwise, a 404 error is raised.
+
+        Args:
+            request (HttpRequest): The request object containing 'file_type'.
+            pk (int, optional): The primary key of the session instance.
+
+        Returns:
+            FileResponse: The requested log file as a downloadable attachment.
+
+        Raises:
+            Http404: If the file type is invalid or the file does not exist.
+        """
+        # Get the session instance 
+        session = self.get_object()
+
+        # Determine the file based on the 'file_type' parameter in the request
+        file_type = request.GET.get('file_type')
+        if file_type == 'run':
+            filename = "run.out"
+        elif file_type == 'proc':
+            filename = "proc.out"
+        else:
+            raise Http404("File not found")
+
+        # Construct the full path to the specified file
+        file_path = os.path.join(session.directory, filename)
+
+        # Check if the file exists and provide it for download; otherwise, return a 404 error if the file is unavailable.
+        if os.path.exists(file_path):
+            return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=filename)
+        else:
+            raise Http404("File not found")
+        
+        
 
     def read_file(self, name, start_line=-100):
         try:
