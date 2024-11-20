@@ -63,7 +63,7 @@ class SerialemInterface(MicroscopeInterface):
     def eucentricity_by_beam_tilt(self, max_movement:int=200, beam_tilt_angle:int=2):
         self.logger.info(f'Doing eucentric height by beam tilt')
         sem.GoToLowDoseArea('V')
-        target_Z = -150 #sem.ReportLDDefocusOffset('V')
+        target_Z = sem.ReportLDDefocusOffset('V')
         offsetZ = 51
         iteration = 0
         while abs(offsetZ) > 5 and iteration != 3:
