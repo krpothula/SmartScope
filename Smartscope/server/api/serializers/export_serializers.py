@@ -137,7 +137,7 @@ class ScipionPluginHoleSerializer(DetailedHoleSerializer):
     targets_in_hole = drf_serializers.ReadOnlyField()
 
     class Meta(DetailedHoleSerializer.Meta):
-        pass
+        exclude = []
     #     fields = ['__all__','targets_in_hole']
     #     exclude = ['targets']
 
