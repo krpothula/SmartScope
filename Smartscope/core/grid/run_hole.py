@@ -82,7 +82,6 @@ class RunHole:
             timer.report_timer('Initial registration to the higher mag image')
             targets = []
             if protocol.targets.reregister:
-                finder_method = 'Registration'
                 classifier_method=None
                 if len(protocol.targets.finders) != 0:
                     targets, finder_method, classifier_method, additional_outputs = find_targets(
@@ -95,6 +94,7 @@ class RunHole:
                     )
                     
                 if targets == []:
+                    finder_method = 'Registration'
                     logger.info('No targets found, registering points from square mag registration.')
                     targets = Targets.create_targets_from_center(image_coords, montage, force_mdoc=FORCE_MDOC_TARGETING)
                 timer.report_timer('Identifying and registering targets')
