@@ -19,7 +19,7 @@ WEIGHT_DIR = os.path.join(os.getenv("TEMPLATE_FILES"), 'weights')
 IS_CUDA = False if eval(os.getenv('FORCE_CPU')) else torch.cuda.is_available() 
 
 
-def find_squares(montage, **kwargs):
+def find_squares(montage, class_map:Dict=None, **kwargs):
     logger.info('Running AI find_squares')
     kwargs['weights'] = os.path.join(WEIGHT_DIR, kwargs['weights'])
     if not IS_CUDA:
