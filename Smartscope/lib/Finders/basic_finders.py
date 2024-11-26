@@ -230,7 +230,7 @@ def fft_method(montage, diameter_in_um=1.2):
     return outputs, True, dict()
 
 
-def regular_pattern(montage, spacing_in_um=3, diameter_in_um=1.2):
+def regular_pattern(montage, spacing_in_um=3, diameter_in_um=1.2, **kwargs):
     """ Applies a regular pattern of targets on the image. """
     pixel_size = montage.pixel_size/10000
     radius_in_pix = int(diameter_in_um / pixel_size // 2)
