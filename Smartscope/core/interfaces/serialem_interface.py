@@ -64,6 +64,8 @@ class SerialemInterface(MicroscopeInterface):
         self.logger.info(f'Doing eucentric height by beam tilt')
         sem.GoToLowDoseArea('V')
         target_Z = sem.ReportLDDefocusOffset('V')
+        sem.SetEucentricFocus(1)
+        sem.ChangeFocus(target_Z)
         offsetZ = 51
         iteration = 0
         while abs(offsetZ) > 5 and iteration != 3:
