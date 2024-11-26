@@ -316,9 +316,9 @@ def parse_method(method):
         return method, {}, [], {}
     args = []
     kwargs = dict()
-    method_name, content = method.popitem()
-    kwargs = content.pop('kwargs', {})
-    args = content.pop('args', [])
+    method_name, content = next(iter(method.items()))
+    kwargs = content.get('kwargs', {})
+    args = content.get('args', [])
 
     logger.info(f'Running protocol method: {method_name}, {content} with args={args} and kwargs={kwargs}')
     return method_name, content, args, kwargs
