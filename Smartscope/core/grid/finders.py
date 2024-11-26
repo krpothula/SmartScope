@@ -12,7 +12,7 @@ def find_targets(montage: Montage, methods: list):
         method = PLUGINS_FACTORY.get_plugin(method)
 
         try:
-            targets, success, additional_outputs  = method.run(montage=montage, force_mdoc=FORCE_MDOC_TARGETING)
+            targets, success, additional_outputs  = method.run(montage=montage, class_map=method.classes, force_mdoc=FORCE_MDOC_TARGETING)
         except Exception as err:
             logger.exception(err)
             success = False

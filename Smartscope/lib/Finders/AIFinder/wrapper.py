@@ -1,6 +1,7 @@
 import os
 import sys
 import cv2
+from typing import Dict
 import numpy as np
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'detectors'))
 
@@ -33,7 +34,11 @@ def find_squares(montage, **kwargs):
     return (squares, labels), success, dict()
 
 
-def find_holes(montage:Montage, **kwargs):
+def find_holes(montage:Montage, class_map:Dict=None, success_threshold:int=10,  **kwargs):
+
+    def filter_hole_class(hole):
+        return class_map[hole[-1]].name == 'Hole'
+    
     logger.info('Running AI hole detection')
     # centroid = find_square_center(montage.image)
     kwargs['weights_circle'] = os.path.join(WEIGHT_DIR, kwargs['weights_circle'])
@@ -49,14 +54,16 @@ def find_holes(montage:Montage, **kwargs):
     #     pad_y = int((montage.shape_y - image.shape[1]) //2)
     #     image = cv2.copyMakeBorder(image,pad_x,pad_x,pad_y,pad_y,cv2.BORDER_CONSTANT,value=0)
     logger.debug(f'Resized shape: {image.shape}, original: {montage.image.shape}')
-    holes, _ = detect_holes(image, **kwargs)
+    all_targets = detect_holes(image, **kwargs)
+    holes = list(filter(lambda x: filter_hole_class(x), all_targets))
+
     logger.info(f'AI hole detection found {len(holes)} holes')
     success = True
-    if len(holes) < 10:
+    if len(holes) < success_threshold:
         success = False
     logger.debug(f'{holes[0]},{type(holes[0])}')
     
-    holes = [(np.array(hole)-np.array(list(montage.center)*2))*binning + np.array(list(montage.center)*2) for hole in holes]
+    holes = [(np.array(hole[0:-1])-np.array(list(montage.center)*2))*binning + np.array(list(montage.center)*2) for hole in holes]
     # logger.debug(f'{holes[0]},{type(holes[0])}')
     return holes, success, dict()
 

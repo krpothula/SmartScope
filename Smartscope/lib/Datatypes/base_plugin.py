@@ -32,6 +32,7 @@ class BaseFeatureAnalyzer(BaseModel, ABC):
     reference: Optional[str]= ''
     method: Optional[str] = ''
     module: Optional[str] = ''
+    classes: Optional[Dict[(str, classLabel)]] = None
     draw_method: Optional[str] = None
     kwargs: Optional[Dict[str, Any]] = Field(default_factory=dict)
     importPaths: Union[str,List] = Field(default_factory=list)
