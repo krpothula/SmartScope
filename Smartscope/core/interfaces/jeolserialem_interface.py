@@ -120,7 +120,8 @@ class JEOLSerialemInterface(SerialemInterface):
 
 
     def image_shift_by_microns(self,isX,isY,tiltAngle, afis:bool=False, goToRecord=True):
-        sem.GoToLowDoseArea('Record')
+        if goToRecord:
+            sem.GoToLowDoseArea('Record')
         isX *= -1
         sem.ImageShiftByMicrons((isX - self.state.imageShiftX), isY - self.state.imageShiftY, 1, int(afis))
         self.state.imageShiftX = isX
