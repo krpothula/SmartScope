@@ -124,6 +124,6 @@ class JEOLSerialemInterface(SerialemInterface):
             sem.GoToLowDoseArea('Record')
         isX *= -1
         sem.ImageShiftByMicrons((isX - self.state.imageShiftX), isY - self.state.imageShiftY, 1, int(afis))
-        self.state.imageShiftX = isX
-        self.state.imageShiftY = isY
-        sem.SetDefocus(self.state.currentDefocus - isY * math.sin(math.radians(tiltAngle)))    
+        # self.state.imageShiftX = isX
+        # self.state.imageShiftY = isY
+        # sem.SetDefocus(self.state.currentDefocus - isY * math.sin(math.radians(tiltAngle)))    
