@@ -412,6 +412,9 @@ class SerialemInterface(MicroscopeInterface):
         if goToRecord:
             sem.GoToLowDoseArea('Record')
         sem.ImageShiftByMicrons(isX - self.state.imageShiftX, isY - self.state.imageShiftY, 1, int(afis))
+        if goToRecord:
+            self.state.imageShiftX = isX
+            self.state.imageShiftY = isY
 
     def set_focus_for_bis_tilt(self,isY,tiltAngle):
         if tiltAngle == 0:
