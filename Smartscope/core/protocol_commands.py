@@ -149,8 +149,6 @@ def highMag(scope:MicroscopeInterface, params,instance, content:Dict, *args, **k
     logger.debug(f'The tilt angle is {params.tilt_angle}, Y axis image-shift corrected from {stage_y - finder.stage_y:.2f} to {isY:.2f}')
     scope.image_shift_by_microns(isX,isY,params.tilt_angle, afis=params.afis)
     logger.debug(f'Image shift is {isX},{isY}.')
-    scope.state.imageShiftX = isX
-    scope.state.imageShiftY = isY
     scope.set_focus_for_bis_tilt(isY,tiltAngle=params.tilt_angle)
     frames = scope.highmag(file=instance.raw, 
                            frames=params.save_frames, 
@@ -224,6 +222,18 @@ def set_apertures_for_highmag(scope:MicroscopeInterface,params,instance, content
 def set_apertures_for_lowmag(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwargs) :
     scope.set_apertures_for_lowmag()
 
+def createHoleRef(scope,params,instance, content:Dict, *args, **kwargs):
+    from Smartscope.core.grid.finders import create_hole_ref_from_image
+    if scope.has_hole_ref:
+        return
+    scope.acquire_medium_mag()
+    image, _, _, _, _, pixel_size = scope.buffer_to_numpy()
+    average = create_hole_ref_from_image(image, pixel_size, instance.grid_id.holeType.hole_size)
+    scope.numpy_to_buffer(average)
+    scope.hole_crop_size = average.shape[0]
+    scope.has_hole_ref = True
+
+
 
 protocolCommandsFactory = dict(
     setAtlasOptics=setAtlasOptics,
@@ -241,6 +251,7 @@ protocolCommandsFactory = dict(
     moveStageWithAtlasToSearchOffset=moveStageWithAtlasToSearchOffset,
     eucentricSearch=eucentricSearch,
     eucentricMediumMag=eucentricMediumMag,
+    createHoleRef=createHoleRef,
     mediumMagHole=mediumMagHole,
     tiltToAngle=tiltToAngle,
     alignToHoleRef=alignToHoleRef,

@@ -340,7 +340,7 @@ class SerialemInterface(MicroscopeInterface):
                 sem.SetFrameBaseName(0, 1, 0, framesName)
         else:
             self.logger.info('Saving frames disabled')
-            sem.SetDoseFracParams('P', 1, 0, 1)
+            sem.SetDoseFracParams('P', 1, 0, 0)
 
         sem.KeepCameraSetChanges('P')
         sem.SetLowDoseMode(1)
