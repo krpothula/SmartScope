@@ -47,7 +47,9 @@ class BaseImage(ABC):
 
     @image_path.setter
     def image_path(self, value):
-        self._image_path = value
+        self._image_path = Path(value)
+
+
 
     @property
     def metadataFile(self):
@@ -55,7 +57,7 @@ class BaseImage(ABC):
 
     @metadataFile.setter
     def metadataFile(self, value):
-        self._metadataFile = value
+        self._metadataFile = Path(value)
 
     @property
     def image(self):
@@ -66,6 +68,10 @@ class BaseImage(ABC):
             by using the BaseImage.read_image() or Montage.
             build_montage() method first
         ''')
+    
+    @image.setter
+    def image(self, value:np.ndarray):
+        self._image = value
 
     @property
     def png(self):
@@ -196,6 +202,8 @@ class BaseImage(ABC):
         logger.debug(f'Relative path from {self.directory} to raw = {relative}')
         os.symlink(relative, self.image_path)
 
+    def __str__(self):
+        return f'{self.name}'
 
     # import imutils
     # def downsample(self, scale=2) -> np.ndarray:

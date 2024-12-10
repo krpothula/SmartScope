@@ -85,7 +85,7 @@ class RunHole:
                 classifier_method=None
                 if len(protocol.targets.finders) != 0:
                     targets, finder_method, classifier_method, additional_outputs = find_targets(
-                        montage, protocol.targets.finders
+                        montage, protocol.targets.finders, grid=grid
                     )
                     generate_diagnostic_figure(
                         montage.image,
@@ -98,6 +98,7 @@ class RunHole:
                     logger.info('No targets found, registering points from square mag registration.')
                     targets = Targets.create_targets_from_center(image_coords, montage, force_mdoc=FORCE_MDOC_TARGETING)
                 timer.report_timer('Identifying and registering targets')
+
                 
 
                 register = register_targets_by_proximity(

@@ -82,6 +82,7 @@ def get_mesh_rotation(grid:AutoloaderGrid, level:Callable=hole_mesh, algo:Callab
     
 #     return avg_spacing, avg_angle
 
+
 def calculate_hole_geometry(grid:AutoloaderGrid):
     targets, mesh_spacing = hole_mesh(grid)
     pixel_size = targets[0].parent.pixel_size
