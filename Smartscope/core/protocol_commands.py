@@ -100,6 +100,10 @@ def eucentricMediumMag(scope:MicroscopeInterface,params,instance, content:Dict, 
     """Calculates eucentricity using the View preset. Equivalent to Eucentric Rough."""
     scope.eucentricity()
 
+def eucentricByBeamTilt(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwargs) :
+    """Calculates eucentricity using the View preset using beam tilt instead of stage tilt. Equivalent to Eucentric Rough."""
+    scope.eucentricity_by_focus()
+
 def mediumMagHole(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwargs) :
     """Acquires the hole at the View preset."""
     scope.medium_mag_hole(file=instance.raw)
@@ -252,6 +256,7 @@ protocolCommandsFactory = dict(
     eucentricSearch=eucentricSearch,
     eucentricMediumMag=eucentricMediumMag,
     createHoleRef=createHoleRef,
+    eucentricByBeamTilt=eucentricByBeamTilt,
     mediumMagHole=mediumMagHole,
     tiltToAngle=tiltToAngle,
     alignToHoleRef=alignToHoleRef,

@@ -219,7 +219,7 @@ def drawAtlasNew(atlas, selector_sorter) -> draw.Drawing:
     return d
 
 def drawSquare(square, targets, display_type, method) -> draw.Drawing:
-    if len(targets) > 700:
+    if len(targets) > 900:
         return drawSquareGroups(square, targets, display_type, method)
     d = draw.Drawing(square.shape_y, square.shape_x, id='square-svg', displayInline=False,  style_='height: 100%; width: 100%')
     d.append(draw.Image(0, 0, d.width, d.height, path=square.png, embed= not square.is_aws))
@@ -282,7 +282,7 @@ def drawSquareGroups(square, targets, display_type, method) -> draw.Drawing:
     labels_list = []
     for bis_group in bis_groups:
         points = np.array(list(map(lambda x: (x.finders.all()[0].x, x.finders.all()[0].y), filter(lambda x: x.bis_group == bis_group, targets))))
-        if len(points) < 3 or bis_group is None:
+        if len(points) < 4 or bis_group is None:
             continue
         edges = list(alpha_shape(points, 100))
         edges = order_edges_indexes(edges)

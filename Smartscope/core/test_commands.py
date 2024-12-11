@@ -150,7 +150,7 @@ def test_protocol_command(microscope_id,detector_id,command, instance=None, inst
                               detector= micModels.Detector.model_validate(detector),
                               atlas_settings= micModels.AtlasSettings.model_validate(detector),
                               additional_settings=additional_settings) as scope:
-        PROTOCOL_COMMANDS_FACTORY[command](scope,params,instance)
+        PROTOCOL_COMMANDS_FACTORY[command](scope,params,instance,content={})
 
 def run_microscope_command(microscope_id, detector_id, command, *args):
     from Smartscope.core.models import Microscope, Detector
