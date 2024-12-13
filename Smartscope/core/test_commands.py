@@ -30,19 +30,24 @@ def test_serialem_connection(ip: str, port: int):
     print('Finished, please look at the serialEM log for the message.')
 
 
-def test_high_mag_frame_processing(
-        test_dir=Path(settings.AUTOSCREENDIR, 'testing', 'montage_test'),
-        name='test_frames'
+def test_highmag_frame_processing(
+        frame_file: str,
+        test_dir=Path(settings.AUTOSCREENDIR, 'testing', 'preprocessing_tests'),
     ):
     '''
     test_dir = autoscreen_dir + group + session
     name = grid_id
     '''
     from Smartscope.lib.preprocessing_methods import process_hm_from_frames
+    frame_file = Path(frame_file)
+    test_dir.mkdir(parents=True, exist_ok=True)
+    Path(test_dir,'raw').mkdir(exist_ok=True)
     os.chdir(test_dir)
-    frames_file_name = '20230321_AB_0317_2_3302_0.0.tif'
-    frames_dirs = [Path(os.getenv('AUTOSCREENDIR')), Path(os.getenv('TEST_FILES'), 'highmagframes')]
-    movie = process_hm_from_frames(name, frames_file_name=frames_file_name, frames_directories=frames_dirs)
+    frames_file_name = frame_file.name
+    frames_dirs = [frame_file.parent]
+    # frames_dirs = [Path(os.getenv('AUTOSCREENDIR')), Path(os.getenv('TEST_FILES'), 'highmagframes')]
+    logger.info(f'Processing frames from {frame_file} in {frames_dirs}.\n Saving to {test_dir}')   
+    movie = process_hm_from_frames(frame_file.stem, frames_file_name=frames_file_name, frames_directories=frames_dirs)
     print(f'All movie data: {movie.check_metadata()}')
 
 
