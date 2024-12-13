@@ -41,14 +41,17 @@ def test_highmag_frame_processing(
     from Smartscope.lib.preprocessing_methods import process_hm_from_frames
     frame_file = Path(frame_file)
     test_dir.mkdir(parents=True, exist_ok=True)
-    Path(test_dir,'raw').mkdir(exist_ok=True)
+    raw_dir = Path(test_dir, 'raw')
+    raw_dir.mkdir(exist_ok=True)
     os.chdir(test_dir)
     frames_file_name = frame_file.name
     frames_dirs = [frame_file.parent]
     # frames_dirs = [Path(os.getenv('AUTOSCREENDIR')), Path(os.getenv('TEST_FILES'), 'highmagframes')]
     logger.info(f'Processing frames from {frame_file} in {frames_dirs}.\n Saving to {test_dir}')   
     movie = process_hm_from_frames(frame_file.stem, frames_file_name=frames_file_name, frames_directories=frames_dirs)
-    print(f'All movie data: {movie.check_metadata()}')
+    logger.info(f'All movie data: {movie.check_metadata()}')
+    logger.info(f'Metadata and CTFFIND results saved in {test_dir/frame_file.stem}. Aligned movie saved in {raw_dir/frame_file.stem}.mrc.')
+
 
 
 def refine_atlas_pixel_size(grids: List[str]):
