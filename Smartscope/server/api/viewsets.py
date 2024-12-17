@@ -656,16 +656,19 @@ class SquareModelViewSet(viewsets.ModelViewSet, GeneralActionsMixin, ExtraAction
             obj = self.get_object()
             action = request.data['action']
             is_bis = obj.grid_id.params_id.bis_max_distance > 0
+            query_filters = dict()
+            if is_bis:
+                query_filters['bis_type'] = 'center'
+                query_filters['bis_group__isnull'] = False
             if action == 'addall':
-                query_filters = dict(selected=False)
-                if is_bis:
-                    query_filters['bis_type'] = 'center'
-                    query_filters['bis_group__isnull'] = False
+                query_filters.update(selected=False)
                 query = obj.holemodel_set.all().filter(**query_filters)
                 selected = True
                 status = 'queued'
             elif action == 'cancelall':
-                query = obj.holemodel_set.filter(status='queued').update(selected=False,status=None)
+                query = obj.holemodel_set.filter(status='queued',**query_filters)
+                selected = False
+                status = None
 
             with transaction.atomic():
                 for target in query:
