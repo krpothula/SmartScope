@@ -218,8 +218,8 @@ def drawAtlasNew(atlas, selector_sorter) -> draw.Drawing:
     d.append(add_legend(set(labels_list), d.width, d.height, atlas.pixel_size))
     return d
 
-def drawSquare(square, targets, display_type, method) -> draw.Drawing:
-    if len(targets) > 900:
+def drawSquare(square, targets, display_type, method, skip_targets_num_check=False) -> draw.Drawing:
+    if len(targets) > 900 and not skip_targets_num_check:
         return drawSquareGroups(square, targets, display_type, method)
     d = draw.Drawing(square.shape_y, square.shape_x, id='square-svg', displayInline=False,  style_='height: 100%; width: 100%')
     d.append(draw.Image(0, 0, d.width, d.height, path=square.png, embed= not square.is_aws))
@@ -272,14 +272,18 @@ def drawSquare(square, targets, display_type, method) -> draw.Drawing:
     return d
 
 def drawSquareGroups(square, targets, display_type, method) -> draw.Drawing:
+    bis_groups = set([i.bis_group for i in targets])
+    if len(bis_groups) == 1:
+        return drawSquare(square, targets, display_type, method, skip_targets_num_check=True)
     d = draw.Drawing(square.shape_y, square.shape_x, id='square-svg', displayInline=False,  style_='height: 100%; width: 100%')
     d.append(draw.Image(0, 0, d.width, d.height, path=square.png, embed= not square.is_aws))
 
     shapes = draw.Group(id='squareShapes')
     text = draw.Group(id='squareText')
 
-    bis_groups = set([i.bis_group for i in targets])
+    
     labels_list = []
+    logger.debug(f'Groups: {bis_groups}')
     for bis_group in bis_groups:
         points = np.array(list(map(lambda x: (x.finders.all()[0].x, x.finders.all()[0].y), filter(lambda x: x.bis_group == bis_group, targets))))
         if len(points) < 4 or bis_group is None:
