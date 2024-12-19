@@ -37,12 +37,14 @@
         </a>
     </div>
     {% endfor %}
+    {% if target_history.current_target is not None %}
     <div class="alert alert-current p-1 m-0">
         {{target_history.current_target.name}}
         <a class="alert-link" onclick="navigateTo({% if target_history.current_target.prefix_lower == 'hole' %}'{{target_history.current_target.square_id.pk}}',{% if target_history.current_target.status == 'processed' %}'{{target_history.current_target.hole_id}}'{% else %}null{% endif %}{% elif target_history.current_target.prefix_lower == 'square' %}'{{target_history.current_target.square_id}}',null{% endif %})">
             <i class="bi bi-box-arrow-up-right"></i>
         </a>
     </div>
+    {% endif %}
     {% for target in target_history.next_targets %}
     <div class="alert alert-next p-1 m-0">
         {{target.name}}
