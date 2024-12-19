@@ -32,6 +32,7 @@ from Smartscope.core.preprocessing_pipelines import PREPROCESSING_PIPELINE_FACTO
 from Smartscope.core.models.grid import AutoloaderGrid
 from Smartscope.core.models.grid_collection_params import GridCollectionParams
 from Smartscope.core.models.screening_session import ScreeningSession
+from Smartscope.core.target_history import TargetHistory
 
 
 logger =logging.getLogger(__name__)
@@ -563,3 +564,14 @@ def getMicroscopeDetectors(request):
     detectors = Detector.objects.filter(microscope_id=microscope, deprecated=False)
     options = [{"value":d.pk,"field":d} for d in detectors]
     return render(request, "general/options_fields.html", {"options": options})
+
+def targetHistory(request, grid_id):
+    # grid_id = request.GET.get('grid_id',None)
+    if grid_id is None:
+        return HttpResponse('Grid not specified')
+    grid = AutoloaderGrid.objects.get(pk=grid_id)
+    target_history = TargetHistory(grid)
+    target_history.get_past_targets()
+    target_history.get_current_target()
+    target_history.get_next_targets()
+    return render(request, "autoscreenViewer/target_history.html", {"target_history": target_history})

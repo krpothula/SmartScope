@@ -199,28 +199,12 @@ async function loadSquare(full_id, metaonly = false, display_type = null, method
 
 };
 
-async function loadHole(elem, metaonly = false) {
-    var center = elem
-    if (elem.classList.contains('completed') | elem.classList.contains('processed')) {
-        if (!metaonly) {
-            //Find center hole
-            if (elem.classList.contains('is_area')) {
-                center = elem.parentElement.getElementsByClassName('center')[0]
-            }
-            var imglm = document.createElement('img')
-            let data = await fetchAsync(`/api/holes/${center.id}/load`, message=`Loading Hole ${center.id}`)
-            // loadSVG(data, generalElements.hole)
-            // $("#Atlas_div").html(data.card)
-            // imglm.src = lm_data.png.url
-            // imglm.className = "col-s-12 col-xl-3 col-lg-4 col-md-6 shadow-1-strong rounded p-2"
-            $("#mmHole").html(data.card)
-        }
-        if (elem.classList.contains('completed')) {  
-        hm_data = await fetchAsync(`/api/holes/${center.id}/highmag/`, message=`Loading high mag data.`)
-        $('#Hole').html(hm_data)
-        grabCuration()
-        };
-    };
+async function loadHole(id, metaonly = false) {
+    let data = await fetchAsync(`/api/holes/${id}/load`, message=`Loading Hole ${id}`)
+    $("#mmHole").html(data.card)
+    hm_data = await fetchAsync(`/api/holes/${id}/highmag/`, message=`Loading high mag data.`)
+    $('#Hole').html(hm_data)
+    grabCuration()
 };
 
 function grabCuration() {
@@ -668,7 +652,7 @@ async function reportMain() {
                 await loadSquare(currentState.square, metaonly = false, display_type = currentState['squareDisplayType'] || null, method = currentState['squareMethod'] || null)
             }
             if (![null, undefined].includes(currentState.hole)) {
-                await loadHole(document.getElementById(currentState.hole))
+                await loadHole(currentState.hole)
             }
             return
         }
@@ -705,7 +689,13 @@ function clickHole(elem) {
     selectElement(elem, holeSelection);
     checkSelection('hole')
     currentState.hole = elem.id
-    loadHole(elem);
+    var center = elem
+    if (elem.classList.contains('completed') | elem.classList.contains('processed')) {
+        if (elem.classList.contains('is_area')) {
+            center = elem.parentElement.getElementsByClassName('center')[0]
+            }
+    }
+    loadHole(center.id);
     console.log(currentState)
     pushState()
 };

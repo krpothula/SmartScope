@@ -58,18 +58,18 @@
         <div class='d-flex flex-row col-12 col-md-4 align-items-center justify-content-center'>
             <button id='gridPreprocessingBtn' hx-get="{% url 'preprocessingPipeline' %}{{grid.grid_id}}" hx-target="#main" hx-swap="beforeend"
             data-bs-toggle="tooltip" data-bs-placement="top" title="Show/Edit preprocessingpipeline." class="btn btn-sm btn-outline-primary col-3 col-md-auto mx-1" type="button">
-                Show preprocessing
+                Preprocessing
             </button>
             <button id='gridStatsBtn' hx-get="{% url 'collectionStats' grid_id=grid.grid_id %}" hx-target="#main" hx-swap="beforeend" class="btn btn-sm btn-outline-primary col-3 col-md-auto mx-1" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseGridStats" aria-expanded="false"
                 aria-controls="collapseExample">
-                Show stats
+                Stats
             </button>
             <button id='gridProtocolBtn' class="btn btn-sm btn-outline-primary col-3 col-md-auto mx-1" type="button"
                 hx-get="{% url 'protocol' grid_id=grid.grid_id %}",
                 hx-target="#main",
                 hx-swap="beforeend",>
-                Show protocol
+                Protocol
             </button>
             {% if tagFeatureFlag %}
             <button id='gridTagsBtn' hx-get="{% url 'tagsManager' grid_id=grid.grid_id %}" hx-target="#main" hx-swap="beforeend" class="btn btn-sm btn-outline-primary col-3 col-md-auto mx-1" type="button">
@@ -79,11 +79,13 @@
             <button id='gridParamBtn' class="btn btn-sm btn-outline-primary col-3 col-md-auto mx-1" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseGridParams" aria-expanded="false"
                 aria-controls="collapseExample">
-                + grid details
+                Parameters
             </button>
+            <button id='gridTargetHistory' hx-get="{% url 'targetHistory' grid_id=grid.grid_id %}" hx-target="#main" hx-swap="beforeend" class="btn btn-sm btn-outline-primary col-3 col-md-auto mx-1" type="button">
+                History/Queue
             <button id='legendsBtn' class="btn btn-sm btn-outline-primary col-3 col-md-auto mx-1" type="button"
                 data-bs-toggle="collapse" data-bs-target="#legends" aria-expanded="false" aria-controls="collapseExample">
-                Show legend
+                Display
             </button>
         </div>
     </div>
