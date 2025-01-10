@@ -32,12 +32,14 @@ def call(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwarg
     script = content.get('script', None)
     assert script is not None, 'No script was specified'
     scope.call(script=script)
+    return instance
 
 def callFunction(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwargs) -> None:
     """Calls any function that is saved in the SerialEM scripts."""
     function = content.get('function', None)
     assert function is not None, 'No function was specified'
     scope.call_function(function=function, *args)
+    return instance
 
 def atlas(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwargs)  -> None:
     """Collects and atlas of X by Y tiles from the collection parameters using the Montage command"""

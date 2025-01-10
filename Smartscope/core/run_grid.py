@@ -333,4 +333,6 @@ def runAcquisition(
     for method in methods:
         method, content, args, kwargs = parse_method(method)
         output = PROTOCOL_COMMANDS_FACTORY[method](scope,params,instance, content, *args, **kwargs)
+        if output is not None:
+            instance = output
     return output
