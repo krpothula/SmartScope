@@ -452,6 +452,16 @@ def list_plugins():
     plugins = PLUGINS_FACTORY.get_plugins()
     print(plugins)
     return plugins
+
+def reload_protocols():
+    from Smartscope.core.settings.worker import PROTOCOLS_FACTORY
+    PROTOCOLS_FACTORY.reload_protocols()
+
+def list_protocols():
+    from Smartscope.core.settings.worker import PROTOCOLS_FACTORY
+    protocols = PROTOCOLS_FACTORY.get_protocols()
+    print(protocols)
+    return protocols
     
 
             

@@ -56,7 +56,7 @@ def read_config(filename = 'default_collection_params.yaml'):
     return collections_params
 
 class AutoloaderGridForm(forms.ModelForm):
-    protocol = forms.ChoiceField(choices=[('auto','auto')] + [(protocol,protocol) for protocol in PROTOCOLS_FACTORY.keys()])
+    protocol = forms.ChoiceField(choices=[('auto','auto')] + [(protocol,protocol) for protocol in PROTOCOLS_FACTORY.get_protocols()])
 
     class Meta:
         from Smartscope.core.models.grid import AutoloaderGrid
@@ -232,7 +232,7 @@ class SetMultiShotForm(forms.Form):
 
 
 class SelectProtocolForm(forms.Form):
-    protocol = forms.ChoiceField(choices=[(protocol,protocol) for protocol in PROTOCOLS_FACTORY.keys()],
+    protocol = forms.ChoiceField(choices=[(protocol,protocol) for protocol in PROTOCOLS_FACTORY.get_protocols()],
                                  label="Protocol",
                                  help_text='Select a different protocol. The session will need to be restarted to take effect')
 
