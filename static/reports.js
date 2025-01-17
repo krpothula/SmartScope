@@ -701,7 +701,7 @@ function clickHole(elem) {
 };
 
 async function extendLattice(square_id) {
-    var url = `/api/squares/${square_id}/extend_lattice/`
+    const url = `/api/squares/${square_id}/extend_lattice/`
     data = await fetchAsync(url, message=`Extending lattice for ${square_id}`)
     console.log(data)
     while (point = data.pop()) {
@@ -709,55 +709,65 @@ async function extendLattice(square_id) {
         targetsSelection.push(addSVGCoord(document.getElementById('square-svg'), point[0], point[1]))
     }
     checkSelection('targets')
-    
+
 }
 
-function openExtendLatticeForm(square_id) {
-    // function to make extend lattice form visible
+function openExtendLatticeForm(square_id, grid_id) {
     document.getElementById('dialogueForm').style.display = 'block';
     document.getElementById('dialogueOverlay').style.display = 'block';
-    // Store the squareId for use during submission
+    // Store the squareId and grid_id for use during submission
+    document.getElementById('extendLatticeForm').dataset.square_id = square_id;
     document.getElementById('extendLatticeForm').dataset.grid_id = grid_id;
 }
 
+// Function to close the form and hide the overlay
 function closeExtendLatticeForm() {
-    // Function to close the form and hide the overlay
     document.getElementById('dialogueForm').style.display = 'none';
     document.getElementById('dialogueOverlay').style.display = 'none';
 }
 
-async function submitExtendLatticeForm(grid_id) {
+async function submitExtendLatticeForm() {
     try {
-        // Construct the API endpoint URL dynamically
-        const url = `/api/grids/1test8fkhjGx7JzMwLA1rYuUzmdVhI/write_grid_geometry/`;
+        // Retrieve the square_id and grid_id from the form's dataset
+        const square_id = document.getElementById('extendLatticeForm').dataset.square_id;
+        const grid_id = document.getElementById('extendLatticeForm').dataset.grid_id;
+        const url = `/api/grids/${grid_id}/write_grid_geometry/`;
 
-        // Collect form data
+        // Collect extend lattice form data
         const formData = {
-            square_mesh_spacing: parseFloat(document.getElementById('squareMeshSpacing').value),
-            square_mesh_rotation: parseFloat(document.getElementById('squareMeshRotation').value),
-            hole_square_spacing: parseFloat(document.getElementById('holeSquareSpacing').value),
-            hole_square_rotation: parseFloat(document.getElementById('holeSquareRotation').value),
-            hole_medmag_spacing: parseFloat(document.getElementById('holeMedmagSpacing').value),
-            hole_medmag_rotation: parseFloat(document.getElementById('holeMedmagRotation').value),
+            square_mesh_spacing: parseFloat(document.getElementById('squareMeshSpacing').value) || null,
+            square_mesh_rotation: parseFloat(document.getElementById('squareMeshRotation').value) || null,
+            hole_square_spacing: parseFloat(document.getElementById('holeSquareSpacing').value) || null,
+            hole_square_rotation: parseFloat(document.getElementById('holeSquareRotation').value) || null,
+            hole_medmag_spacing: parseFloat(document.getElementById('holeMedmagSpacing').value) || null,
+            hole_medmag_rotation: parseFloat(document.getElementById('holeMedmagRotation').value) || null,
         };
 
         console.log('Submitting grid data:', formData);
 
-        // Send the POST request
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
+                'X-CSRFToken': csrftoken, 
             },
             body: JSON.stringify(formData),
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Form submission result:', result);
+
         // Close the form after a successful submission
         closeExtendLatticeForm();
 
-        // Call extendLattice function
+        // call extendLattice to perform further actions
+        console.log('Square ID passed to extendLattice:', square_id);
         extendLattice(square_id);
+
     } catch (error) {
         console.error('Error submitting form:', error);
     }
