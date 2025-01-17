@@ -25,10 +25,10 @@
             </a>
             <ul class="dropdown-menu" aria-labelledby="extendLatticeDropdown">
                 <li>
-                    <button class="dropdown-item" onmousedown="extendLattice('{{instance.pk}}', 'optionA')">Default</button>
+                    <button class="dropdown-item" onmousedown="extendLattice('{{instance.pk}}')">Default</button>
                 </li>
                 <li>
-                    <button class="dropdown-item" onmousedown="openExtendLatticeForm('{{ instance.pk }}', '{{ instance.grid_id.pk }}', 'optionB')">Interactive</button>
+                    <button class="dropdown-item" onmousedown="openExtendLatticeForm('{{ instance.pk }}', '{{ instance.grid_id.pk }}')">Interactive</button>
                 </li>
             </ul>
         </li>
