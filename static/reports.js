@@ -712,6 +712,59 @@ async function extendLattice(square_id) {
     
 }
 
+function openExtendLatticeForm(square_id) {
+    // function to make extend lattice form visible
+    document.getElementById('dialogueForm').style.display = 'block';
+    document.getElementById('dialogueOverlay').style.display = 'block';
+    // Store the squareId for use during submission
+    document.getElementById('extendLatticeForm').dataset.grid_id = grid_id;
+}
+
+function closeExtendLatticeForm() {
+    // Function to close the form and hide the overlay
+    document.getElementById('dialogueForm').style.display = 'none';
+    document.getElementById('dialogueOverlay').style.display = 'none';
+}
+
+async function submitExtendLatticeForm(grid_id) {
+    try {
+        // Construct the API endpoint URL dynamically
+        const url = `/api/grids/1test8fkhjGx7JzMwLA1rYuUzmdVhI/write_grid_geometry/`;
+
+        // Collect form data
+        const formData = {
+            square_mesh_spacing: parseFloat(document.getElementById('squareMeshSpacing').value),
+            square_mesh_rotation: parseFloat(document.getElementById('squareMeshRotation').value),
+            hole_square_spacing: parseFloat(document.getElementById('holeSquareSpacing').value),
+            hole_square_rotation: parseFloat(document.getElementById('holeSquareRotation').value),
+            hole_medmag_spacing: parseFloat(document.getElementById('holeMedmagSpacing').value),
+            hole_medmag_rotation: parseFloat(document.getElementById('holeMedmagRotation').value),
+        };
+
+        console.log('Submitting grid data:', formData);
+
+        // Send the POST request
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify(formData),
+        });
+
+        // Close the form after a successful submission
+        closeExtendLatticeForm();
+
+        // Call extendLattice function
+        extendLattice(square_id);
+    } catch (error) {
+        console.error('Error submitting form:', error);
+    }
+}
+
+
+
 $('#main').on("mousedown", '#Square_div svg', function (event) {
     if (event.shiftKey) {
         targetsSelection.push(SvgCoords(event))
