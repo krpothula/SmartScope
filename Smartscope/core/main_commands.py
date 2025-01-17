@@ -435,45 +435,6 @@ def extend_lattice(square_id, force_recalculate='False'):
     new_targets = lattice_extension(coords, montage.image, rotation, spacing)
     print(json.dumps(new_targets.tolist()))
 
-def write_grid_geometry(request, square_id):
-    if request.method == 'POST':
-        try:
-            # Extract data from the POST request
-            square_mesh_rotation = request.POST.get('square_mesh_rotation') or None
-            hole_square_spacing = float(request.POST.get('hole_square_spacing'))
-            hole_square_rotation = float(request.POST.get('hole_square_rotation'))
-            hole_medmag_spacing = request.POST.get('hole_medmag_spacing') or None
-            hole_medmag_rotation = request.POST.get('hole_medmag_rotation') or None
-
-            # Prepare the data dictionary
-            grid_geometry_data = {
-                "square_mesh_spacing": None,
-                "square_mesh_rotation": square_mesh_rotation,
-                "hole_square_spacing": hole_square_spacing,
-                "hole_square_rotation": hole_square_rotation,
-                "hole_medmag_spacing": hole_medmag_spacing,
-                "hole_medmag_rotation": hole_medmag_rotation,
-            }
-
-            # Define the directory path where the file will be saved
-            directory = os.path.join(settings.MEDIA_ROOT, 'session_directory', square_id)
-            os.makedirs(directory, exist_ok=True)  # Ensure the directory exists
-
-            # Define the file path
-            file_path = os.path.join(directory, 'grid_geometry.json')
-
-            # Write the data to the JSON file
-            with open(file_path, 'w') as json_file:
-                json.dump(grid_geometry_data, json_file, indent=4)
-
-            # Redirect or return a success message
-            return JsonResponse({'message': 'File written successfully', 'file_path': file_path})
-
-        except Exception as e:
-            return HttpResponseBadRequest(f'An error occurred: {str(e)}')
-
-    return HttpResponseBadRequest('Invalid request method. Only POST is allowed.')
-
 def highmag_processing(grid_id: str, *args, **kwargs):
     from .preprocessing_pipelines import highmag_processing
     highmag_processing(grid_id, *args, **kwargs)
