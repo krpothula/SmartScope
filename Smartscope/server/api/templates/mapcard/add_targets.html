@@ -20,7 +20,7 @@
             <button id="deleteHoles" class="dropdown-item" onmousedown="deleteHoles('{{instance.pk}}')">Delete Holes</button>
         </li>
         <li class="dropdown-submenu">
-            <a class="dropdown-item dropdown-toggle" href="#" id="extendLatticeDropdown">
+            <a class="dropdown-item dropdown-toggle" href="#" id="extendLatticeDropdown" data-instance-pk="{{ instance.pk }}" data-grid-id="{{ instance.grid_id.pk }}">
                 Extend Lattice <span class="submenu-arrow">&#9656;</span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="extendLatticeDropdown">
@@ -28,7 +28,7 @@
                     <button class="dropdown-item" onmousedown="extendLattice('{{instance.pk}}', 'optionA')">Default</button>
                 </li>
                 <li>
-                    <button class="dropdown-item" onmousedown="openExtendLatticeForm('{{instance.pk}}', 'optionB')">Interactive</button>
+                    <button class="dropdown-item" onmousedown="openExtendLatticeForm('{{ instance.pk }}', '{{ instance.grid_id.pk }}', 'optionB')">Interactive</button>
                 </li>
             </ul>
         </li>
@@ -64,7 +64,7 @@
 <!-- Hidden Form -->
 <div id="dialogueForm" class="dialogue-form">
     <h5>Extend Lattice Parameters</h5>
-    <form id="extendLatticeForm">
+    <form id="extendLatticeForm"">
         <div class="form-group row">
             <label for="squareMeshSpacing" class="col-4 col-form-label">Square Mesh Spacing</label>
             <div class="col-8">
@@ -103,10 +103,12 @@
         </div>
         <div class="d-flex justify-content-end mt-4">
             <button type="button" class="btn btn-secondary me-2" onclick="closeExtendLatticeForm()">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="submitExtendLatticeForm('{{ instance.pk }}')">Submit</button>
+            <button type="button" class="btn btn-primary" onclick="submitExtendLatticeForm()">Submit</button>
         </div>
     </form>
 </div>
 
 <!-- Background Overlay -->
-<div id="dialogueOverlay" class="dialogue-overlay" onclick="closeForm()"></div>
+<div id="dialogueOverlay" class="dialogue-overlay" onclick="closeExtendLatticeForm()"></div>
+
+                              
