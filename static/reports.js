@@ -765,7 +765,6 @@ async function submitExtendLatticeForm() {
         closeExtendLatticeForm();
 
         // call extendLattice to perform further actions
-        console.log('Square ID passed to extendLattice:', square_id);
         extendLattice(square_id);
 
     } catch (error) {
