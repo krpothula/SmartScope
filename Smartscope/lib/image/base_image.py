@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from .temporary_s3_file import TemporaryS3File
+from .process_image import ProcessImage
 
 import logging
 logger = logging.getLogger(__name__)
@@ -144,6 +145,9 @@ class BaseImage(ABC):
 
     @property
     def pixel_size(self):
+        if 'ImageToStageMatrix' in self.metadata.iloc[-1].keys():
+            logger.info('Using ImageToStageMatrix to calculate pixel size.')
+            return ProcessImage.pixel_spacing_from_vectors(self.metadata.iloc[-1].ImageToStageMatrix)
         return self.metadata.iloc[0].PixelSpacing
     
     @property
