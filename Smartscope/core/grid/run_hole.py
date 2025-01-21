@@ -106,6 +106,9 @@ class RunHole:
                     [target.coords for target in targets]
                 )
                 for h, index in zip(hole_group,register):
+                    if index == -1:
+                        logger.warning(f'No target found for hole {h.name}. It may mean that the hole finder at medium mag did not perform well. This has been added to avoid aquiring the same hole twice.')
+                        continue
                     target = targets[index]
                     if not params.multishot_per_hole:
                         targets_to_register=[target]
