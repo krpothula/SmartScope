@@ -563,6 +563,49 @@ class AutoloaderGridViewSet(viewsets.ModelViewSet, GeneralActionsMixin, ExtraAct
         except Exception as err:
             logger.exception(f'Error while updating parameters, {err}.')
             return Response(dict(success=False))
+    
+    @action(detail=True, methods=['post'])
+    def write_grid_geometry(self, request, pk=None):
+        ### write the grid_geometry.json file from extend lattice form
+        try:
+            # Get the grid
+            grid = self.get_object()
+            logger.debug(f"Grid found: {grid}")
+            logger.debug(f"Grid directory: {grid.directory}")
+
+            # Ensure the grid's directory exists
+            if not os.path.exists(grid.directory):
+                os.makedirs(grid.directory)
+                logger.debug(f"Created directory: {grid.directory}")
+
+            # Define the file path
+            file_path = os.path.join(grid.directory, 'grid_geometry.json')
+            logger.debug(f"File path: {file_path}")
+
+            # Write the payload to the file
+            with open(file_path, 'w') as file:
+                json.dump(request.data, file, indent=4)
+                logger.debug(f"Data written to file: {file_path}")
+
+            # Return a success response as JSON
+            return Response(
+                {
+                    'status': 'success',
+                    'message': 'Grid data written successfully!',
+                    'file_path': file_path
+                },
+            )
+
+        except Exception as e:
+            logger.error(f"Error encountered: {e}", exc_info=True)
+            # Return an error response as JSON
+            return Response(
+                {
+                    'status': 'error',
+                    'message': f"An error occurred: {str(e)}"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @ action(detail=True, methods=['get'])
     def export(self, resquest, **kwargs):
