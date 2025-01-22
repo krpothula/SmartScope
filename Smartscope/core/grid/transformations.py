@@ -1,3 +1,4 @@
+from pprint import pformat
 import numpy as np
 import logging
 from scipy.spatial.distance import cdist
@@ -110,34 +111,55 @@ def unassign_target(distance_matrix,closest_index, non_unique_values):
     return closest_index
 
 
-def reassign_targets(distance_matrix,closest_index, loop=0):
+def assing_last_indexes(distance_matrix,initial_distance_matrix):
+    rows_all_inf = np.all(distance_matrix == np.inf, axis=1)
+    cols_all_inf = np.all(distance_matrix == np.inf, axis=0)
+    row_indices = np.where(rows_all_inf)[0]
+    col_indices = np.where(cols_all_inf)[0]
+    for row_index in row_indices:
+        for col_index in col_indices:
+            distance_matrix[row_index,col_index] = initial_distance_matrix[row_index,col_index]
+    return np.argmin(distance_matrix,1)
+
+def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_matrix=None):
+    if loop == 0:
+        initial_distance_matrix = distance_matrix.copy()
+    np.set_printoptions(precision=3)
     if loop > distance_matrix.shape[1]+1:
         raise ValueError('Loop limit reached, Please report this bug.')
     unique_values, non_unique_values = find_values_by_uniqueness(closest_index)
     unassigned_values = set(range(distance_matrix.shape[1])) - set(closest_index)
+    
     if len(unassigned_values) == 0:
         logger.warning(f"It seems like there are no unassigned values but there are still multiple targets assigned to the same hole. Will unassign the farthest target.")
         return unassign_target(distance_matrix,closest_index, non_unique_values)
     logger.info(f'Unique values: {unique_values}, Non-unique values: {non_unique_values}, Unassigned values: {unassigned_values}')
 
+
     for value in unassigned_values:
         idx = np.argmin(distance_matrix[:,value])
         distance_matrix[:,value] = np.inf
-        distance_matrix[value,:] = np.inf
-        distance_matrix[idx,value] = 0
+        if not 0 in distance_matrix[idx]:
+            distance_matrix[idx,value] = 0
     for value in non_unique_values:
         idx = np.argmin(distance_matrix[:,value])
         distance_matrix[:,value] = np.inf
-        distance_matrix[idx,value] = 0
+        if not 0 in distance_matrix[idx]:
+            distance_matrix[idx,value] = 0
+
+  
 
     logger.debug(f'Distance matrix:\n {distance_matrix}')
     new_closest_index = np.argmin(distance_matrix,1)
+    if (new_closest_index == closest_index).all():
+        logger.warning('No change in assignment. Checking if all inf')
+        return assing_last_indexes(distance_matrix,initial_distance_matrix)
     logger.info(f'Closest index: {new_closest_index}')
     if len(new_closest_index) == len(set(new_closest_index)):
         logger.info('All targets have been assigned to a unique hole')
         return new_closest_index
     logger.warning('There are multiple targets assigned to the same hole. Running another loop.')
-    return reassign_targets(distance_matrix,new_closest_index, loop=loop+1)
+    return reassign_targets(distance_matrix,new_closest_index, loop=loop+1, initial_distance_matrix=initial_distance_matrix)
     
 def register_targets_by_proximity(
         targets:np.ndarray,
@@ -145,7 +167,7 @@ def register_targets_by_proximity(
     ):
     distance_matrix = cdist(targets,new_targets)
     closest_index = np.argmin(distance_matrix,1)
-    logger.debug(f'Distance matrix:\n {distance_matrix}')
+    logger.debug(f'Distance matrix:\n {pformat(distance_matrix)}')
     logger.info(f'Closest index: {closest_index}')
     if len(closest_index) == len(set(closest_index)):
         logger.info('All targets have been assigned to a unique hole')
