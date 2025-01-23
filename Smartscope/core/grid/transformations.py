@@ -151,6 +151,7 @@ def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_mat
         rows_to_check = np.argwhere(closest_index == value).flatten()
         logger.debug(f'Rows to check: {rows_to_check}')
         check_column = 1
+        unassigned_new = unassigned_values.copy()
         for unassigned in unassigned_values:
             rows_where_unassigned = np.argwhere(sorted_indices[:,check_column] == unassigned).flatten()
             next_closests = np.intersect1d(rows_to_check, rows_where_unassigned)
@@ -162,11 +163,16 @@ def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_mat
                 idx = next_closests[0]
                 logger.info(f'Assiging index {idx} to {unassigned}')
                 new_closest_index[idx] = unassigned
+                unassigned_new.remove(unassigned)
                 break
-            
             idx = rows_to_check[np.argmin(distance_matrix[rows_to_check, unassigned])]
             logger.info(f'Assiging index {idx} to {unassigned}')
             new_closest_index[idx] = unassigned
+            unassigned_new.remove(unassigned)
+        if len(unassigned_new) == 0:
+            break
+
+
         # for i, row in enumerate(sorted_indices):
         #     # logger.debug(row)
         #     if value == row[0]:
