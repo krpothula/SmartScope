@@ -130,7 +130,7 @@ def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_mat
     if loop == 0:
         initial_distance_matrix = distance_matrix.copy()
     np.set_printoptions(precision=3)
-    if loop > distance_matrix.shape[1]+1:
+    if loop > distance_matrix.shape[1]*2:
         raise ValueError('Loop limit reached, Please report this bug.')
     
     sorted_indices = np.argsort(distance_matrix, axis=1)
@@ -139,11 +139,9 @@ def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_mat
     unassigned_values = set(range(distance_matrix.shape[1])) - set(closest_index)
     
     if len(unassigned_values) == 0:
-        logger.warning(f"It seems like there are no unassigned values but there are still multiple targets assigned to the same hole. Will unassign the farthest target.")
+        logger.warning(f"It seems like there are no unassigned values but there are still multiple targets assigned to the same hole. Will unassign the farthest target. Loop: {loop}")
         return unassign_target(distance_matrix,closest_index, non_unique_values)
     logger.info(f'Unique values: {unique_values}, Non-unique values: {non_unique_values}, Unassigned values: {unassigned_values}')
-
-
 
     new_closest_index = closest_index.copy()
 
@@ -172,7 +170,6 @@ def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_mat
         if len(unassigned_new) == 0:
             break
 
-
         # for i, row in enumerate(sorted_indices):
         #     # logger.debug(row)
         #     if value == row[0]:
@@ -194,11 +191,14 @@ def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_mat
     logger.debug(f'Distance matrix:\n {distance_matrix}')
     # new_closest_index = np.argmin(distance_matrix,1)
     if (new_closest_index == closest_index).all():
-        logger.warning('No change in assignment. Checking if all inf')
-        new_closest_index = assing_last_indexes(distance_matrix,initial_distance_matrix)
+        logger.warning('No change in assignment. Checking which target is closest to unassigned.')
+        for unassigned in unassigned_values:
+            idx = np.argmin(distance_matrix[:,unassigned])
+            logger.info(f'Closest target to {unassigned} is {idx}')
+            new_closest_index[idx] = unassigned
     logger.info(f'Closest index: {new_closest_index}')
     if len(new_closest_index) == len(set(new_closest_index)):
-        logger.info('All targets have been assigned to a unique hole')
+        logger.info(f'All targets have been assigned to a unique hole. Loop: {loop}')
         return new_closest_index
     logger.warning('There are multiple targets assigned to the same hole. Running another loop.')
     return reassign_targets(distance_matrix,new_closest_index, loop=loop+1, initial_distance_matrix=initial_distance_matrix)
