@@ -2,6 +2,8 @@ from pprint import pformat
 import numpy as np
 import logging
 from scipy.spatial.distance import cdist
+from scipy.spatial import KDTree
+from scipy.optimize import linear_sum_assignment
 from Smartscope.lib.image.process_image import ProcessImage
 
 
@@ -93,127 +95,167 @@ def recenter_targets(
 #     R = np.array(((c, -s), (s, c)))
 #     rotated = np.sum(R * np.reshape(coord, (-1, 1)), axis=0)
 #     return rotated
-def find_values_by_uniqueness(array: np.ndarray):
-    """Split an array into unique and non-unique values"""
-    # Get unique values and their counts
-    unique_values, counts = np.unique(array, return_counts=True)
-    # Select values that appear only once
-    values_appear_once = unique_values[counts == 1]
-    values_appear_more_than_once = unique_values[counts > 1]
-    return values_appear_once, values_appear_more_than_once
+# def find_values_by_uniqueness(array: np.ndarray):
+#     """Split an array into unique and non-unique values"""
+#     # Get unique values and their counts
+#     unique_values, counts = np.unique(array, return_counts=True)
+#     # Select values that appear only once
+#     values_appear_once = unique_values[counts == 1]
+#     values_appear_more_than_once = unique_values[counts > 1]
+#     return values_appear_once, values_appear_more_than_once
 
-def unassign_target(distance_matrix,closest_index, non_unique_values):
-    for value in non_unique_values:
-        indices_to_check = np.argwhere(closest_index == value).flatten()
-        # pruned_distance_matrix = distance_matrix[indices_to_check]
-        # idx = np.argmin(distance_matrix[indices_to_check,value])
-        idx = indices_to_check[np.argmin(distance_matrix[indices_to_check, value])]
+# def unassign_target(distance_matrix,closest_index, non_unique_values):
+#     for value in non_unique_values:
+#         indices_to_check = np.argwhere(closest_index == value).flatten()
+#         # pruned_distance_matrix = distance_matrix[indices_to_check]
+#         # idx = np.argmin(distance_matrix[indices_to_check,value])
+#         idx = indices_to_check[np.argmin(distance_matrix[indices_to_check, value])]
 
-        logger.info(f'Keeping target {idx}. Unassigning the rest assigned to {value}')
-        mask = (closest_index == value) & (np.arange(len(closest_index)) != idx)
-        closest_index[mask]= -1
-    logger.info(f'Closest index: {closest_index}')
-    return closest_index
+#         logger.info(f'Keeping target {idx}. Unassigning the rest assigned to {value}')
+#         mask = (closest_index == value) & (np.arange(len(closest_index)) != idx)
+#         closest_index[mask]= -1
+#     logger.info(f'Closest index: {closest_index}')
+#     return closest_index
 
 
-def assing_last_indexes(distance_matrix,initial_distance_matrix):
-    rows_all_inf = np.all(distance_matrix == np.inf, axis=1)
-    cols_all_inf = np.all(distance_matrix == np.inf, axis=0)
-    row_indices = np.where(rows_all_inf)[0]
-    col_indices = np.where(cols_all_inf)[0]
-    for row_index in row_indices:
-        for col_index in col_indices:
-            distance_matrix[row_index,col_index] = initial_distance_matrix[row_index,col_index]
-    return np.argmin(distance_matrix,1)
+# def assing_last_indexes(distance_matrix,initial_distance_matrix):
+#     rows_all_inf = np.all(distance_matrix == np.inf, axis=1)
+#     cols_all_inf = np.all(distance_matrix == np.inf, axis=0)
+#     row_indices = np.where(rows_all_inf)[0]
+#     col_indices = np.where(cols_all_inf)[0]
+#     for row_index in row_indices:
+#         for col_index in col_indices:
+#             distance_matrix[row_index,col_index] = initial_distance_matrix[row_index,col_index]
+#     return np.argmin(distance_matrix,1)
 
-def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_matrix=None):
-    if loop == 0:
-        initial_distance_matrix = distance_matrix.copy()
-    np.set_printoptions(precision=3)
-    if loop > distance_matrix.shape[1]*2:
-        raise ValueError('Loop limit reached, Please report this bug.')
+# def reassign_targets(distance_matrix,closest_index, loop=0, initial_distance_matrix=None):
+#     if loop == 0:
+#         initial_distance_matrix = distance_matrix.copy()
+#     np.set_printoptions(precision=3)
+#     if loop > distance_matrix.shape[1]*2:
+#         raise ValueError('Loop limit reached, Please report this bug.')
     
-    sorted_indices = np.argsort(distance_matrix, axis=1)
-    logger.info(f'Sorted indices: \n{sorted_indices}')
-    unique_values, non_unique_values = find_values_by_uniqueness(closest_index)
-    unassigned_values = set(range(distance_matrix.shape[1])) - set(closest_index)
+#     sorted_indices = np.argsort(distance_matrix, axis=1)
+#     logger.info(f'Sorted indices: \n{sorted_indices}')
+#     unique_values, non_unique_values = find_values_by_uniqueness(closest_index)
+#     unassigned_values = set(range(distance_matrix.shape[1])) - set(closest_index)
     
-    if len(unassigned_values) == 0:
-        logger.warning(f"It seems like there are no unassigned values but there are still multiple targets assigned to the same hole. Will unassign the farthest target. Loop: {loop}")
-        return unassign_target(distance_matrix,closest_index, non_unique_values)
-    logger.info(f'Unique values: {unique_values}, Non-unique values: {non_unique_values}, Unassigned values: {unassigned_values}')
+#     if len(unassigned_values) == 0:
+#         logger.warning(f"It seems like there are no unassigned values but there are still multiple targets assigned to the same hole. Will unassign the farthest target. Loop: {loop}")
+#         return unassign_target(distance_matrix,closest_index, non_unique_values)
+#     logger.info(f'Unique values: {unique_values}, Non-unique values: {non_unique_values}, Unassigned values: {unassigned_values}')
 
-    new_closest_index = closest_index.copy()
+#     new_closest_index = closest_index.copy()
 
-    for value in non_unique_values:
-        rows_to_check = np.argwhere(closest_index == value).flatten()
-        logger.debug(f'Rows to check: {rows_to_check}')
-        check_column = 1
-        unassigned_new = unassigned_values.copy()
-        for unassigned in unassigned_values:
-            rows_where_unassigned = np.argwhere(sorted_indices[:,check_column] == unassigned).flatten()
-            next_closests = np.intersect1d(rows_to_check, rows_where_unassigned)
-            logger.debug(f'Next closests: {next_closests}')
-            if len(next_closests) == 0:
-                logger.debug(f'No next closests for {unassigned}')
-                continue
-            if len(next_closests) == 1:
-                idx = next_closests[0]
-                logger.info(f'Assiging index {idx} to {unassigned}')
-                new_closest_index[idx] = unassigned
-                unassigned_new.remove(unassigned)
-                break
-            idx = rows_to_check[np.argmin(distance_matrix[rows_to_check, unassigned])]
-            logger.info(f'Assiging index {idx} to {unassigned}')
-            new_closest_index[idx] = unassigned
-            unassigned_new.remove(unassigned)
-        if len(unassigned_new) == 0:
-            break
+#     for value in non_unique_values:
+#         rows_to_check = np.argwhere(closest_index == value).flatten()
+#         logger.debug(f'Rows to check: {rows_to_check}')
+#         check_column = 1
+#         unassigned_new = unassigned_values.copy()
+#         for unassigned in unassigned_values:
+#             rows_where_unassigned = np.argwhere(sorted_indices[:,check_column] == unassigned).flatten()
+#             next_closests = np.intersect1d(rows_to_check, rows_where_unassigned)
+#             logger.debug(f'Next closests: {next_closests}')
+#             if len(next_closests) == 0:
+#                 logger.debug(f'No next closests for {unassigned}')
+#                 continue
+#             if len(next_closests) == 1:
+#                 idx = next_closests[0]
+#                 logger.info(f'Assiging index {idx} to {unassigned}')
+#                 new_closest_index[idx] = unassigned
+#                 unassigned_new.remove(unassigned)
+#                 break
+#             idx = rows_to_check[np.argmin(distance_matrix[rows_to_check, unassigned])]
+#             logger.info(f'Assiging index {idx} to {unassigned}')
+#             new_closest_index[idx] = unassigned
+#             unassigned_new.remove(unassigned)
+#         if len(unassigned_new) == 0:
+#             break
 
-        # for i, row in enumerate(sorted_indices):
-        #     # logger.debug(row)
-        #     if value == row[0]:
-        #         if row[1] in unassigned_values:
-        #             new_closest_index[i] = row[1]
-        # idx = np.argmin(distance_matrix[:,value])
-        # # distance_matrix[:,value] = np.inf
-        # if not 0 in distance_matrix[idx]:
-        #     distance_matrix[idx,value] = 0
-    # for value in unassigned_values:
-    #     idx = np.argmin(distance_matrix[:,value])
-    #     # distance_matrix[:,value] = np.inf
-    #     if not 0 in distance_matrix[idx]:
-    #         distance_matrix[idx,value] = 0
+#         # for i, row in enumerate(sorted_indices):
+#         #     # logger.debug(row)
+#         #     if value == row[0]:
+#         #         if row[1] in unassigned_values:
+#         #             new_closest_index[i] = row[1]
+#         # idx = np.argmin(distance_matrix[:,value])
+#         # # distance_matrix[:,value] = np.inf
+#         # if not 0 in distance_matrix[idx]:
+#         #     distance_matrix[idx,value] = 0
+#     # for value in unassigned_values:
+#     #     idx = np.argmin(distance_matrix[:,value])
+#     #     # distance_matrix[:,value] = np.inf
+#     #     if not 0 in distance_matrix[idx]:
+#     #         distance_matrix[idx,value] = 0
 
 
   
 
-    logger.debug(f'Distance matrix:\n {distance_matrix}')
-    # new_closest_index = np.argmin(distance_matrix,1)
-    if (new_closest_index == closest_index).all():
-        logger.warning('No change in assignment. Checking which target is closest to unassigned.')
-        for unassigned in unassigned_values:
-            idx = np.argmin(distance_matrix[:,unassigned])
-            logger.info(f'Closest target to {unassigned} is {idx}')
-            new_closest_index[idx] = unassigned
-    logger.info(f'Closest index: {new_closest_index}')
-    if len(new_closest_index) == len(set(new_closest_index)):
-        logger.info(f'All targets have been assigned to a unique hole. Loop: {loop}')
-        return new_closest_index
-    logger.warning('There are multiple targets assigned to the same hole. Running another loop.')
-    return reassign_targets(distance_matrix,new_closest_index, loop=loop+1, initial_distance_matrix=initial_distance_matrix)
+#     logger.debug(f'Distance matrix:\n {distance_matrix}')
+#     # new_closest_index = np.argmin(distance_matrix,1)
+#     if (new_closest_index == closest_index).all():
+#         logger.warning('No change in assignment. Checking which target is closest to unassigned.')
+#         for unassigned in unassigned_values:
+#             idx = np.argmin(distance_matrix[:,unassigned])
+#             logger.info(f'Closest target to {unassigned} is {idx}')
+#             new_closest_index[idx] = unassigned
+#     logger.info(f'Closest index: {new_closest_index}')
+#     if len(new_closest_index) == len(set(new_closest_index)):
+#         logger.info(f'All targets have been assigned to a unique hole. Loop: {loop}')
+#         return new_closest_index
+#     logger.warning('There are multiple targets assigned to the same hole. Running another loop.')
+#     return reassign_targets(distance_matrix,new_closest_index, loop=loop+1, initial_distance_matrix=initial_distance_matrix)
     
-def register_targets_by_proximity(
-        targets:np.ndarray,
-        new_targets:np.ndarray,
-    ):
-    distance_matrix = cdist(targets,new_targets)
-    closest_index = np.argmin(distance_matrix,1)
-    logger.debug(f'Distance matrix:\n {pformat(distance_matrix)}')
-    logger.info(f'Closest index: {closest_index}')
-    if len(closest_index) == len(set(closest_index)):
-        logger.info('All targets have been assigned to a unique hole')
-        return closest_index
-    logger.warning('There are multiple targets assigned to the same hole. Re-assinging.')
-    return reassign_targets(distance_matrix,closest_index)
+def register_targets_by_proximity(X, Y):
+    """
+    Find closest points in Y for each point in X using KDTree.
+    """
+    distances = np.linalg.norm(X[:, None] - Y[None, :], axis=2)
 
+    # Solve the assignment problem
+    row_indices, col_indices = linear_sum_assignment(distances)
+    print(row_indices, col_indices)
+    assingment=np.ones(X.shape[0]) * -1
+    for i, j in zip(row_indices, col_indices):
+        assingment[i] = j
+
+    return assingment
+
+# def register_targets_by_proximity(
+#         targets:np.ndarray,
+#         new_targets:np.ndarray,
+#     ):
+#     distance_matrix = cdist(targets,new_targets)
+#     closest_index = np.argmin(distance_matrix,1)
+#     logger.debug(f'Distance matrix:\n {pformat(distance_matrix)}')
+#     logger.info(f'Closest index: {closest_index}')
+#     if len(closest_index) == len(set(closest_index)):
+#         logger.info('All targets have been assigned to a unique hole')
+#         return closest_index
+#     logger.warning('There are multiple targets assigned to the same hole. Re-assinging.')
+#     return reassign_targets(distance_matrix,closest_index)
+
+
+def estimate_transform(X, Y):
+    # Center the data
+    X_mean = np.mean(X, axis=0)
+    Y_mean = np.mean(Y, axis=0)
+    X_centered = X - X_mean
+    Y_centered = Y - Y_mean
+
+    # Compute scaling
+    scale = np.linalg.norm(Y_centered) / np.linalg.norm(X_centered)
+
+    # Compute rotation using SVD
+    H = X_centered.T @ Y_centered
+    U, _, Vt = np.linalg.svd(H)
+    R = Vt.T @ U.T
+
+    # Ensure a proper rotation (no reflection)
+    if np.linalg.det(R) < 0:
+        Vt[-1, :] *= -1
+        R = Vt.T @ U.T
+
+    # Compute translation
+    t = Y_mean - scale * (X_mean @ R)
+
+    return scale, R, t
