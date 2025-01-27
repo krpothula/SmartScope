@@ -5,6 +5,7 @@ from django.db import transaction
 from django.core.cache import cache
 
 from Smartscope.core.test_commands import *
+from Smartscope.core.utils.training_data import add_to_training_set
 
 
 import numpy as np
