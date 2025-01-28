@@ -236,6 +236,8 @@ def register_targets_by_proximity(X, Y):
 
 
 def estimate_transform(X, Y):
+    X = np.asarray(X)
+    Y = np.asarray(Y)
     # Center the data
     X_mean = np.mean(X, axis=0)
     Y_mean = np.mean(Y, axis=0)
