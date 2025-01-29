@@ -102,8 +102,8 @@ class RunHole:
                 
 
                 register = register_targets_by_proximity(
-                    image_coords,
-                    [target.coords for target in targets]
+                    image_coords-montage.center,
+                    np.asarray([target.coords for target in targets])-montage.center
                 )
                 for h, index in zip(hole_group,register):
                     if index == -1:

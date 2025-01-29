@@ -204,17 +204,44 @@ def recenter_targets(
 #         return new_closest_index
 #     logger.warning('There are multiple targets assigned to the same hole. Running another loop.')
 #     return reassign_targets(distance_matrix,new_closest_index, loop=loop+1, initial_distance_matrix=initial_distance_matrix)
+def filter_Y_based_on_X(X, Y):
+    """
+    Remove points in Y that are farther than the maximum distance from X's center.
+    """
+    # Compute center of X
+    # X_center = np.mean(X, axis=0)
     
+    # Compute distances of X points from the center
+    X_distances = np.linalg.norm(X, axis=1)
+    
+    # Maximum distance in X
+    max_X_distance = np.max(X_distances)
+    
+    # Compute distances of Y points from the X center
+    # Y_center = np.mean(X, axis=0)
+    Y_distances = np.linalg.norm(Y, axis=1)
+    logger.debug(f'Max X_distance:{max_X_distance}, Max Y_distance:{np.max(Y_distances)}')
+    
+    # Filter Y to keep only points within the max distance of X
+    Y_filtered = Y[Y_distances <= max_X_distance*1.2]
+    logger.debug(f'Max radius from new points: {max_X_distance} (Threshold:{max_X_distance*1.1}), removed {len(Y) - len(Y_filtered)} points that were too far away') 
+    
+    return Y_filtered
+
 def register_targets_by_proximity(X, Y):
     """
     Find closest points in Y for each point in X using KDTree.
     """
+    X = np.asarray(X)
+    Y = np.asarray(Y)
+    Y = filter_Y_based_on_X(Y,X)
     distances = np.linalg.norm(X[:, None] - Y[None, :], axis=2)
 
     # Solve the assignment problem
     row_indices, col_indices = linear_sum_assignment(distances)
     print(row_indices, col_indices)
     assingment=np.ones(X.shape[0]) * -1
+    assingment = assingment.astype(int)
     for i, j in zip(row_indices, col_indices):
         assingment[i] = j
 
