@@ -220,13 +220,19 @@ def filter_Y_based_on_X(X, Y):
     # Compute distances of Y points from the X center
     # Y_center = np.mean(X, axis=0)
     Y_distances = np.linalg.norm(Y, axis=1)
-    logger.debug(f'Max X_distance:{max_X_distance}, Max Y_distance:{np.max(Y_distances)}')
+    idxs = np.linspace(0,len(Y)-1,len(Y),dtype=int)
+
+    
+    logger.debug(f'Max X_distance:{max_X_distance}, Max Y_distance:{np.max(Y_distances)}, idxs:{idxs}')
     
     # Filter Y to keep only points within the max distance of X
     Y_filtered = Y[Y_distances <= max_X_distance*1.2]
+    idx_filtered = idxs[Y_distances <= max_X_distance*1.2]
+    assert len(Y_filtered) == len(idx_filtered)
+
     logger.debug(f'Max radius from new points: {max_X_distance} (Threshold:{max_X_distance*1.1}), removed {len(Y) - len(Y_filtered)} points that were too far away') 
     
-    return Y_filtered
+    return Y_filtered, idx_filtered
 
 def register_targets_by_proximity(X, Y):
     """
@@ -234,17 +240,18 @@ def register_targets_by_proximity(X, Y):
     """
     X = np.asarray(X)
     Y = np.asarray(Y)
-    Y = filter_Y_based_on_X(Y,X)
-    distances = np.linalg.norm(X[:, None] - Y[None, :], axis=2)
+    logger.debug(f'length of X: {len(X)}, length of Y: {len(Y)}')
+    X_filteted, indices = filter_Y_based_on_X(Y,X)
+    distances = np.linalg.norm(X_filteted[:, None] - Y[None, :], axis=2)
 
     # Solve the assignment problem
     row_indices, col_indices = linear_sum_assignment(distances)
-    print(row_indices, col_indices)
+    logger.debug(f"Row indices: {row_indices} {len(row_indices)}, Col indices: {col_indices} {len(col_indices)}")
     assingment=np.ones(X.shape[0]) * -1
     assingment = assingment.astype(int)
     for i, j in zip(row_indices, col_indices):
-        assingment[i] = j
-
+        assingment[indices[i]] = j
+    logger.debug(f"Assignment: {assingment}")
     return assingment
 
 # def register_targets_by_proximity(
