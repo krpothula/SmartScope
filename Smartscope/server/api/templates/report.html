@@ -75,7 +75,7 @@
                 hx-swap="beforeend",>
                 Protocol
             </button>
-            {% if tagFeatureFlag %}
+            {% if tagsFeatureFlag %}
             <button id='gridTagsBtn' hx-get="{% url 'tagsManager' grid_id=grid.grid_id %}" hx-target="#main" hx-swap="beforeend" class="btn btn-sm btn-outline-primary col-3 col-md-auto" type="button">
                 Tags
             </button>
