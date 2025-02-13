@@ -49,9 +49,10 @@ def get_hole_count(grid:AutoloaderGrid, hole_list=None):
         holes_per_hour = round(num_completed / (elapsed.total_seconds() / 3600), 1)
         last_hour_date_time = grid.end_time - timedelta(hours=1)
         last_hour = completed.filter(completion_time__gte=last_hour_date_time).count()
-        if grid.params.max_exposures_for_grid > 0:
-            remaining = timedelta(hours=(grid.params.max_exposures_for_grid - num_completed)/last_hour)
-        remaining = timedelta(hours=queued_exposures/last_hour)
+        if grid.params_id.max_exposures_for_grid > 0:
+            remaining = timedelta(hours=(grid.params_id.max_exposures_for_grid - num_completed)/last_hour)
+        else:    
+            remaining = timedelta(hours=queued_exposures/last_hour)
         
     logger.debug(f'{num_completed} completed holes, {queued} queued holes, {holes_per_hour} holes per hour, {last_hour} holes in the last hour')
 
