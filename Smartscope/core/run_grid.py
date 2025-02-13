@@ -27,6 +27,7 @@ from .protocols import get_or_set_protocol
 from .preprocessing_pipelines import load_preprocessing_pipeline
 from .db_manipulations import update, queue_atlas, add_targets
 from .data_manipulations import select_n_areas
+from .stats import count_completed
 
 logger = logging.getLogger(__name__)
 
@@ -161,13 +162,15 @@ def run_grid(
         check_stop_flag(session_id)
         grid = update(grid, refresh_from_db=True, last_update=None)
         params = grid.params_id
+        if params.max_exposures_for_grid > 0 and count_completed(grid) >= params.max_exposures_for_grid:
+            running = False
+            continue
         if grid.status == GridStatus.ABORTING:
-            preprocessing.stop(grid)
-            break
-        else:
-            square, hole = get_queue(grid)
-            priority = get_target_priority(grid, (square, hole))
-            logger.debug(f'Priority: {priority}')
+            running = False
+            continue
+        square, hole = get_queue(grid)
+        priority = get_target_priority(grid, (square, hole))
+        logger.debug(f'Priority: {priority}')
 
         logger.info(f'Queued => Square: {square}, Hole: {hole}')
         logger.info(f'Targets done: {is_done}')

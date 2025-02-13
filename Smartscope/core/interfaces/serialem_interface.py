@@ -162,6 +162,7 @@ class SerialemInterface(MicroscopeInterface):
             sem.SetSlitIn(0)
         
     def atlas(self, size, file=''):
+        self.state.current_mag = 'atlas'
         sem.OpenNewMontage(size[0],size[1], file)
         self.checkDewars()
         self.checkPump()
@@ -172,6 +173,7 @@ class SerialemInterface(MicroscopeInterface):
         self.logger.info('Atlas acquisition finished')
 
     def atlas_in_low_dose_search(self, size, file=''):
+        self.state.current_mag = 'atlas'
         sem.GoToLowDoseArea('S')
         sem.SetEucentricFocus()
         sem.ParamSetToUseForMontage(3)
@@ -214,6 +216,7 @@ class SerialemInterface(MicroscopeInterface):
         self.state.last_autocenter_time = time.time()
 
     def square(self, file=''):
+        self.state.current_mag = 'square'
         sem.SetLowDoseMode(1)
         sem.GoToLowDoseArea('S')
         self.checkDewars()
@@ -287,6 +290,7 @@ class SerialemInterface(MicroscopeInterface):
         self.has_hole_ref = True
 
     def acquire_medium_mag(self):
+        self.state.current_mag = 'hole'
         sem.GoToLowDoseArea('V')
         time.sleep(1)
         self.checkDewars()
@@ -304,10 +308,22 @@ class SerialemInterface(MicroscopeInterface):
         self.acquire_medium_mag()
         self.save_image(file)
 
+    def save_eucentric_focus(self):
+        if self.state.eucentricDefocus is None:
+            sem.SetEucentricFocus()
+            self.state.eucentricDefocus = sem.ReportDefocus()
+
     def autofocus(self, def1, def2, step):
+        sem.GoToLowDoseArea('Record')
+        self.save_eucentric_focus()
         self.rollDefocus(def1, def2, step)
         sem.SetTargetDefocus(self.state.defocusTarget)
         sem.AutoFocus()
+        defocus, error_code = sem.ReportDefocus()
+        self.state.add_to_last_five_defocus(defocus)
+        if error_code in [1,2,3,-1]:
+            self.logger.error(f'Autofocus failed with error code {error_code}.')
+            
         self.state.currentDefocus = sem.ReportDefocus()
         self.state.set_last_autofocus_position()
 
@@ -346,7 +362,7 @@ class SerialemInterface(MicroscopeInterface):
         sem.SetLowDoseMode(1)
 
     def refineZLP(self, zerolossDelay:float):
-        if self.detector.energyFilter and zerolossDelay > 0:
+        if self.detector.energyFilter and zerolossDelay >= 0:
             sem.RefineZLP(zerolossDelay * 60)
     
     def collectHardwareDark(self, harwareDarkDelay:int):
