@@ -94,6 +94,7 @@ class Microscope(BaseModel):
     directory:str= Field(alias='windows_path')
     scopePath:str = Field(alias='scope_path')
     apertureControl:bool = Field(alias='aperture_control', default=False)
+    temperatureControl:bool = Field(alias='temperature_control', default=True)
     coldFEG:bool = Field(alias='cold_FEG', default=False)
 
     class Config:
