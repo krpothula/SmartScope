@@ -18,6 +18,7 @@ classifiers = [
 dynamic = ["version", "readme"]
 dependencies = [
     "boto3==1.26.157",
+    "celery[redis]",
     "channels_redis==4.1.0",
     "channels[daphne]",
     "ddt==1.6.0",

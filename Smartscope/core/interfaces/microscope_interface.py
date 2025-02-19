@@ -218,6 +218,9 @@ class MicroscopeInterface(ABC):
     def reset_AFIS_image_shift(self, afis:bool=False):
         pass
 
+    def save_eucentric_focus(self):
+        pass
+
     @abstractmethod
     def autofocus(self, def1, def2, step):
         pass
