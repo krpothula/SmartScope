@@ -53,7 +53,7 @@ def autoscreen(session_id:str):
 
             logger.debug(f'Main Log handlers:{logger.handlers}')
             logger.debug(scope.__dict__)
-
+            logger.debug(scope.microscope.__dict__)
             # RUN grid
             for grid in grids:
                 status = run_grid(grid, scope) #processing_queue,

@@ -319,7 +319,7 @@ class SerialemInterface(MicroscopeInterface):
         self.rollDefocus(def1, def2, step)
         sem.SetTargetDefocus(self.state.defocusTarget)
         sem.AutoFocus()
-        defocus, error_code = sem.ReportDefocus()
+        defocus, error_code = sem.ReportAutoFocus()
         self.state.add_to_last_five_defocus(defocus)
         if error_code in [1,2,3,-1]:
             self.logger.error(f'Autofocus failed with error code {error_code}.')

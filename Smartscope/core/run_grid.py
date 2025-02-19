@@ -238,7 +238,7 @@ def run_grid(
         elif is_done:
             microscope_id = microscope.pk
             tmp_file = os.path.join(settings.TEMPDIR, f'.pause_{microscope_id}')
-            if os.path.isfile(tmp_file):
+            if os.path.isfile(tmp_file) or scope.microscope.loaderSize == 1:
                 paused = os.path.join(settings.TEMPDIR, f'paused_{microscope_id}')
                 open(paused, 'w').close()
                 update(grid, status=GridStatus.PAUSED)
