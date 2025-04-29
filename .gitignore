@@ -4,6 +4,7 @@ Untitled.ipynb
 .eman2log.txt
 cryolo_models/
 Tomo.egg-info
+*.egg-info/
 .DS_Store
 # Smartscope.egg-info/
 .vscode/
@@ -42,3 +43,4 @@ serialem.egg-info/
 SmartScope-docs
 data
 Smartscope/.local.env
+.venv

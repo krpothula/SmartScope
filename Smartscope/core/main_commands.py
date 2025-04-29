@@ -4,9 +4,10 @@ import json
 from django.db import transaction
 from django.core.cache import cache
 
+#These imports expose functions from other files to the smartscope.py script. Not ideal but that's how the CLI works for now.
 from Smartscope.core.test_commands import *
 from Smartscope.core.utils.training_data import add_to_training_set
-
+from Smartscope.core.export_optics import export_optics
 
 import numpy as np
 
@@ -448,11 +449,11 @@ def reload_plugins():
     from Smartscope.core.settings.worker import PLUGINS_FACTORY
     PLUGINS_FACTORY.reload_plugins()
 
-def list_plugins():
-    from Smartscope.core.settings.worker import PLUGINS_FACTORY
-    plugins = PLUGINS_FACTORY.get_plugins()
-    print(plugins)
-    return plugins
+# def list_plugins():
+#     from Smartscope.core.settings.worker import PLUGINS_FACTORY
+#     plugins = PLUGINS_FACTORY.get_plugins()
+#     print(plugins)
+#     return plugins
 
 def reload_protocols():
     from Smartscope.core.settings.worker import PROTOCOLS_FACTORY

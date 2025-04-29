@@ -13,7 +13,8 @@ def setAtlasOptics(scope:MicroscopeInterface,params,instance, content:Dict, *arg
 
 def setAtlasOpticsDelay(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwargs)  -> None:
     """Same as setAtlasOptics with delays between each commands."""
-    scope.set_atlas_optics_delay(delay=1)
+    delay=content.get('delay',1)
+    scope.set_atlas_optics_delay(delay=delay)
 
 def setAtlasOpticsImagingState(scope:MicroscopeInterface,params,instance, content:Dict, *args, **kwargs) :
     """Sets the atlas optics from an Imaging State named "Atlas"."""
@@ -143,6 +144,9 @@ def highMag(scope:MicroscopeInterface, params,instance, content:Dict, *args, **k
     
     Also automatically corrects defocus and image-shift based on the tilt angle.
     """
+    delay_multiplier = content.get('delay_multiplier', 1)
+    additional_delay = content.get('additional_delay', 0)
+
     finder = instance.finders.first()
     stage_x, stage_y, _ = scope.report_stage()
     grid = instance.grid_id
@@ -153,8 +157,8 @@ def highMag(scope:MicroscopeInterface, params,instance, content:Dict, *args, **k
         offset = add_IS_offset(grid_type.hole_size, grid_mesh.name, offset_in_um=params.offset_distance)
     isX, isY = stage_x - finder.stage_x + offset, (stage_y - finder.stage_y) #* cos(radians(params.tilt_angle))
     logger.debug(f'The tilt angle is {params.tilt_angle}, Y axis image-shift corrected from {stage_y - finder.stage_y:.2f} to {isY:.2f}')
-    scope.image_shift_by_microns(isX,isY,params.tilt_angle, afis=params.afis)
-    logger.debug(f'Image shift is {isX},{isY}.')
+    scope.image_shift_by_microns(isX,isY,params.tilt_angle, afis=params.afis, delay_multiplier=delay_multiplier, additional_delay=additional_delay)
+    # logger.debug(f'Image shift is {isX},{isY}.')
     scope.set_focus_for_bis_tilt(isY,tiltAngle=params.tilt_angle)
     frames = scope.highmag(file=instance.raw, 
                            frames=params.save_frames, 
@@ -245,6 +249,16 @@ def refineOpticsForHighMag(scope,params,instance, content:Dict, *args, **kwargs)
         if params.zeroloss_delay != -1:
             scope.refineZLP(zerolossDelay=0)
 
+def rollDefocus(scope,params,instance, content:Dict, *args, **kwargs):
+    scope.roll_defocus(
+        params.target_defocus_min,
+        params.target_defocus_max,
+        params.step_defocus,
+    )
+
+def autofocusByZ(scope,params,instance, content:Dict, *args, **kwargs):
+    scope.autofocus_by_z()
+
 
 protocolCommandsFactory = dict(
     setAtlasOptics=setAtlasOptics,
@@ -276,5 +290,7 @@ protocolCommandsFactory = dict(
     autoFocus=autoFocus,
     autoFocusAfterDistance=autoFocusAfterDistance,
     waitDrift=waitDrift,
-    zeroImageShift=zeroImageShift
+    zeroImageShift=zeroImageShift,
+    rollDefocus=rollDefocus,
+    autofocusByZ=autofocusByZ,
 )

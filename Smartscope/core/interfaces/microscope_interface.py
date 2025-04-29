@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 
 import serialem as sem
@@ -17,6 +17,7 @@ class MicroscopeLogger:
     prefix = 'MicroscopeInterface'
     debug_prefix = 'DEBUG:'
     info_prefix = 'INFO:'
+    error_prefix = 'ERROR'
 
     def _create_message(self, message:str, *prefix:str):
         return ' '.join(prefix) + message
@@ -28,6 +29,10 @@ class MicroscopeLogger:
     def debug(self, message:str):
         msg = self._create_message(message, self.prefix, self.debug_prefix)
         logger.debug(msg)
+    
+    def error(self, message:str):
+        msg = self._create_message(message, self.prefix, self.debug_prefix)
+        logger.error(msg)
 
 @dataclass
 class MicroscopeInterface(ABC):
@@ -35,7 +40,7 @@ class MicroscopeInterface(ABC):
     microscope: Microscope
     detector: Detector
     atlas_settings:AtlasSettings
-    state: MicroscopeState = MicroscopeState()
+    state: MicroscopeState = field(default_factory=MicroscopeState)
     apertures: Apertures = None
     additional_settings: dict = None 
     has_hole_ref: bool = False
@@ -87,7 +92,7 @@ class MicroscopeInterface(ABC):
     def recenter_beam(self, interval_in_minutes:int=5):
         pass
 
-    def rollDefocus(self, def1, def2, step):
+    def _rollDefocus(self, def1, def2, step):
         mindef = max([def1, def2])
         maxdef = min([def1, def2])
         defocusTarget = round(sem.ReportTargetDefocus() - abs(step), 2)
@@ -95,6 +100,9 @@ class MicroscopeInterface(ABC):
             defocusTarget = mindef
         self.state.defocusTarget = defocusTarget
         return defocusTarget
+    
+    def roll_defocus(self, def1, def2, step):
+        pass
 
     def reset_state(self):
         self.has_hole_ref = False
@@ -174,7 +182,7 @@ class MicroscopeInterface(ABC):
         pass
 
     @abstractmethod
-    def image_shift_by_microns(self,isX,isY,tiltAngle, afis:bool=False, goToRecord=True):
+    def image_shift_by_microns(self,isX,isY,tiltAngle, afis:bool=False, goToRecord=True, delay_multiplier=1, additional_delay=0):
         pass
 
     @abstractmethod

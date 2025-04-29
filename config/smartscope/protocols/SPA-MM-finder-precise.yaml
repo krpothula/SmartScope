@@ -1,4 +1,4 @@
-name: NegativeStain
+name: SPA MM Finder Precise
 atlas:
   acquisition:
       - setAtlasOptics
@@ -16,10 +16,11 @@ square:
     - setAperturesForLowMag
     - moveStageWithAtlasToSearchOffset
     - realignToSquare
-    - eucentricSearch
+    - eucentricMediumMag
     - square
   targets:
     finders:
+      - AI hole finder
       - Regular pattern
     selectors:
       - Graylevel selector
@@ -27,12 +28,19 @@ square:
 mediumMag:
   acquisition:
     - setAperturesForHighMag
+    - setFocusPosition
     - tiltToAngle
     - moveStage
+    - createHoleRef
+    - alignToHoleRef
+    - zeroImageShift
     - mediumMagHole
     - rollDefocus
     - autoFocus
     - waitDrift
+  targets:
+    finders:
+      - Medium Mag AI hole finder
 highMag:
   acquisition:
     - highMag
