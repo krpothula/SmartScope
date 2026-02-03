@@ -41,12 +41,12 @@
                         data-bs-toggle="tooltip" data-bs-placement="top" title="Clear Selection"><i
                             class="bi bi-x-square"></i></a>
                 </li>
-                <!--Ruler icon in the square_div -->
+                <!--Ruler icon for measurement (Square card only) -->
                 {% if instance.targets_prefix == 'hole' %}
                 <li class="nav-item d-flex align-items-center">
-                    <a id="angleMeasure" class="nav-link"
+                    <a id="{{instance.targets_prefix}}AngleMeasure" class="nav-link angleMeasureBtn"
                        data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Measure square rotation angle">
+                       title="Measure angle and distance">
                         <i class="bi bi-rulers"></i>
                     </a>
                 </li>
@@ -56,7 +56,7 @@
     </nav>
 
     <div class="d-flex h-100 w-100 m-0 p-0 justify-content-center align-items-center">
-        <div id="{{instance.prefix}}_im" class="d-flex w-100 h-100 justify-content-center">
+        <div id="{{instance.prefix}}_im" class="d-flex w-100 h-100 justify-content-center" data-pixel-size="{{instance.pixel_size}}">
             {{ svg | safe }}
         </div>
     </div>

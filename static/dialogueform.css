@@ -1,19 +1,16 @@
 .dialogue-form {
     display: none;
     position: fixed;
-    top: 18%;
+    top: 30%;
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: white;
     border: 1px solid #ccc;
-    padding: 5px;
+    padding: 10px 15px;
     z-index: 3000;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    border-radius: 2px;
-    width: 600px;
-    height: 250px; /* Set a specific height */
-    overflow-y: auto; /* Allow scrolling if content overflows */
-    overflow-x: hidden;
+    border-radius: 4px;
+    width: 420px;
 }
 
 .dialogue-overlay {

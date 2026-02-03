@@ -948,37 +948,50 @@ function updateData(data) {
 
 /**
  * This code allows to draw a line over the "Square_im" element
- * inside the "square_div" container. It calculates and displays 
+ * inside the "square_div" container. It calculates and displays
  * the angle of the drawn line relative to the horizontal axis.
- 
+
  Step 1: Capture mouse events on "square_im"
  Step 2: Draw a line dynamically and a horizontal reference axis
  Step 3: Compute the angle of rotation
- Step 4: Display angle and arc remove the line after 1 second
+ Step 4: Display angle, distance and measurement info box in top-right corner
 */
 
 let lineStartX, lineStartY, lineEndX, lineEndY;
 let isDrawing = false;
-let isDrawingEnabled = false;
+let isDrawingEnabled = false; // Default deactivated
 let timeoutId = null;
+let currentPixelSize = null; // pixel size in Angstroms
+let activeCardContainer = null; // Track which card is active for measurement
 
-// this code allows to draw over click of angleMeasure 
-$(document).on("click", "#angleMeasure", function () {
-    isDrawingEnabled = !isDrawingEnabled;
-    console.log("Drawing Mode:", isDrawingEnabled);
-
-    // Clear existing lines & angles when reactivating
+// this code allows to draw over click of angleMeasure (Square card only)
+$(document).on("click", "#Square_div .angleMeasureBtn", function () {
+    // Toggle drawing mode for Square card
     if (isDrawingEnabled) {
+        isDrawingEnabled = false;
+        activeCardContainer = null;
+        $(this).removeClass('disabled');
+        clearExistingLines();
+    } else {
+        isDrawingEnabled = true;
+        activeCardContainer = '#Square_div';
+        $(this).addClass('disabled');
         clearExistingLines();
     }
+
+    console.log("Drawing Mode:", isDrawingEnabled, "Active Card:", activeCardContainer);
 });
 
-// this code captures the starting coordinates on mouse down 
+// this code captures the starting coordinates on mouse down (Square card only)
 $('#main').on("mousedown", '#Square_div svg', function (event) {
-    if (!isDrawingEnabled) return;
+    if (!isDrawingEnabled || activeCardContainer !== '#Square_div') return;
 
     let svg = event.target.closest("svg");
     let coords = getLineCoords(event);
+
+    // Get pixel size from parent container data attribute (in Angstroms)
+    let container = $(svg).closest('[data-pixel-size]').get(0) || document.getElementById('Square_im');
+    currentPixelSize = container ? parseFloat(container.dataset.pixelSize) : null;
 
     lineStartX = coords.x;
     lineStartY = coords.y;
@@ -997,7 +1010,7 @@ $('#main').on("mousedown", '#Square_div svg', function (event) {
     line.setAttribute("stroke-width", "10");
     svg.appendChild(line);
 
-    // initiates horizontal reference line 
+    // initiates horizontal reference line
     let hAxis = document.createElementNS("http://www.w3.org/2000/svg", 'line');
     hAxis.setAttribute("id", "horizontalAxis");
     hAxis.setAttribute("x1", lineStartX);
@@ -1008,17 +1021,6 @@ $('#main').on("mousedown", '#Square_div svg', function (event) {
     hAxis.setAttribute("stroke-width", "10");
     svg.appendChild(hAxis);
 
-    // initiates angle Text
-    let text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-    text.setAttribute("id", "angleText");
-    text.setAttribute("x", lineStartX + 20);
-    text.setAttribute("y", lineStartY - 20);
-    text.setAttribute("fill", "red");
-    text.setAttribute("font-size", "200px");
-    text.setAttribute("font-weight", "bold");
-    text.textContent = "0°";
-    svg.appendChild(text);
-
     // initiates arc between horizontal and drawn line
     let arc = document.createElementNS("http://www.w3.org/2000/svg", 'path');
     arc.setAttribute("id", "angleArc");
@@ -1026,18 +1028,21 @@ $('#main').on("mousedown", '#Square_div svg', function (event) {
     arc.setAttribute("stroke", "red");
     arc.setAttribute("stroke-width", "10");
     svg.appendChild(arc);
+
+    // Create measurement info box in top-right corner
+    let svgWidth = svg.viewBox.baseVal.width || svg.getBBox().width;
+    createMeasurementInfoBox(svg, svgWidth);
 });
 
-// Update line, arc & angle on mouse movement
+// Update line, arc & angle on mouse movement (Square card only)
 $('#main').on("mousemove", '#Square_div svg', function (event) {
-    if (!isDrawing || !isDrawingEnabled) return;
+    if (!isDrawing || !isDrawingEnabled || activeCardContainer !== '#Square_div') return;
 
     let coords = getLineCoords(event);
     lineEndX = coords.x;
     lineEndY = coords.y;
 
     let line = document.getElementById("drawnLine");
-    let text = document.getElementById("angleText");
     let arc = document.getElementById("angleArc");
 
     if (line) {
@@ -1045,25 +1050,21 @@ $('#main').on("mousemove", '#Square_div svg', function (event) {
         line.setAttribute("y2", lineEndY);
     }
 
-    if (text) {
-        let angle = calculateAngleAnticlockwise(lineStartX, lineStartY, lineEndX, lineEndY);
-        text.textContent = `${angle.toFixed(2)}°`;
+    // Calculate angle and distance
+    let angle = calculateAngleAnticlockwise(lineStartX, lineStartY, lineEndX, lineEndY);
+    let distancePixels = calculateDistance(lineStartX, lineStartY, lineEndX, lineEndY);
 
-        //Position text in the middle of the arc
-        let textX = lineStartX + 40;
-        let textY = lineStartY - 30;
-        text.setAttribute("x", textX);
-        text.setAttribute("y", textY);
-    }
+    // Update measurement info box
+    updateMeasurementInfoBox(angle, distancePixels);
 
     if (arc) {
         updateArcPath(lineStartX, lineStartY, lineEndX, lineEndY);
     }
 });
 
-//Finalize drawing on mouse up
+//Finalize drawing on mouse up (Square card only)
 $('#main').on("mouseup", '#Square_div svg', function (event) {
-    if (!isDrawing || !isDrawingEnabled) return;
+    if (!isDrawing || !isDrawingEnabled || activeCardContainer !== '#Square_div') return;
 
     isDrawing = false;
     let coords = getLineCoords(event);
@@ -1073,8 +1074,14 @@ $('#main').on("mouseup", '#Square_div svg', function (event) {
     let angle = calculateAngleAnticlockwise(lineStartX, lineStartY, lineEndX, lineEndY);
     console.log(`Final Angle: ${angle.toFixed(2)}°`);
 
-    isDrawingEnabled = false;
-    timeoutId = setTimeout(clearExistingLines, 2000);
+    // After 2 seconds: clear lines and reset to deactivated (dark)
+    timeoutId = setTimeout(function() {
+        clearExistingLines();
+        // Reset to deactivated state - dark color
+        isDrawingEnabled = false;
+        activeCardContainer = null;
+        $('.angleMeasureBtn').removeClass('disabled');
+    }, 2000);
 });
 
 // Convert mouse event to SVG coordinates
@@ -1096,6 +1103,113 @@ function calculateAngleAnticlockwise(x1, y1, x2, y2) {
     }
 
     return angle;
+}
+
+// Calculate distance between two points in pixels
+function calculateDistance(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+// Create measurement info box with gray background in top-right corner
+function createMeasurementInfoBox(svg, svgWidth) {
+    let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
+    group.setAttribute("id", "measurementInfoBox");
+
+    // Scale box size based on SVG width (larger box for larger images)
+    let scaleFactor = svgWidth / 4000; // Base scale on typical image width
+    if (scaleFactor < 1) scaleFactor = 1;
+    if (scaleFactor > 3) scaleFactor = 3;
+
+    // Position in top-right corner with padding - scaled sizes
+    let boxWidth = 1200 * scaleFactor;
+    let boxHeight = 450 * scaleFactor;
+    let boxX = svgWidth - boxWidth - 50;
+    let boxY = 50;
+    let padding = 40 * scaleFactor;
+    let titleSize = 80 * scaleFactor;
+    let textSize = 70 * scaleFactor;
+    let lineHeight = 100 * scaleFactor;
+    let cornerRadius = 20 * scaleFactor;
+
+    // Gray background rectangle
+    let rect = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+    rect.setAttribute("x", boxX);
+    rect.setAttribute("y", boxY);
+    rect.setAttribute("width", boxWidth);
+    rect.setAttribute("height", boxHeight);
+    rect.setAttribute("fill", "rgba(60, 60, 60, 0.92)");
+    rect.setAttribute("rx", cornerRadius);
+    rect.setAttribute("ry", cornerRadius);
+    group.appendChild(rect);
+
+    // Title text
+    let title = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+    title.setAttribute("id", "measurementTitle");
+    title.setAttribute("x", boxX + padding);
+    title.setAttribute("y", boxY + titleSize);
+    title.setAttribute("fill", "white");
+    title.setAttribute("font-size", `${titleSize}px`);
+    title.setAttribute("font-weight", "bold");
+    title.textContent = "Lattice Measurement";
+    group.appendChild(title);
+
+    // Angle text
+    let angleText = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+    angleText.setAttribute("id", "infoAngleText");
+    angleText.setAttribute("x", boxX + padding);
+    angleText.setAttribute("y", boxY + titleSize + lineHeight);
+    angleText.setAttribute("fill", "white");
+    angleText.setAttribute("font-size", `${textSize}px`);
+    angleText.textContent = "Angle: 0.00°";
+    group.appendChild(angleText);
+
+    // Distance text
+    let distText = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+    distText.setAttribute("id", "infoDistanceText");
+    distText.setAttribute("x", boxX + padding);
+    distText.setAttribute("y", boxY + titleSize + lineHeight * 2);
+    distText.setAttribute("fill", "white");
+    distText.setAttribute("font-size", `${textSize}px`);
+    distText.textContent = "Distance: 0.00 μm";
+    group.appendChild(distText);
+
+    // Pixel info text (shows pixel size if available)
+    let pixelText = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+    pixelText.setAttribute("id", "infoPixelText");
+    pixelText.setAttribute("x", boxX + padding);
+    pixelText.setAttribute("y", boxY + titleSize + lineHeight * 3);
+    pixelText.setAttribute("fill", "white");
+    pixelText.setAttribute("font-size", `${textSize}px`);
+    if (currentPixelSize && !isNaN(currentPixelSize)) {
+        pixelText.textContent = `Pixel size: ${currentPixelSize.toFixed(2)} Å`;
+    } else {
+        pixelText.textContent = "Pixel size: N/A";
+    }
+    group.appendChild(pixelText);
+
+    svg.appendChild(group);
+}
+
+// Update measurement info box with current values
+function updateMeasurementInfoBox(angle, distancePixels) {
+    let angleText = document.getElementById("infoAngleText");
+    let distText = document.getElementById("infoDistanceText");
+
+    if (angleText) {
+        angleText.textContent = `Angle: ${angle.toFixed(2)}°`;
+    }
+
+    if (distText) {
+        // Convert distance to micrometers if pixel size is available
+        // pixel_size is in Angstroms, 1 μm = 10000 Å
+        if (currentPixelSize && !isNaN(currentPixelSize)) {
+            let distanceAngstroms = distancePixels * currentPixelSize;
+            let distanceMicrons = distanceAngstroms / 10000;
+            distText.textContent = `Distance: ${distanceMicrons.toFixed(2)} μm`;
+        } else {
+            distText.textContent = `Distance: ${distancePixels.toFixed(0)} px`;
+        }
+    }
 }
 
 // function to update arc, horizontal axis grows same as drawn line
@@ -1156,12 +1270,13 @@ $('#main').on("mousedown",".opt-overlay", function (event) {
     downloadPNG(svg_id, $(this).attr('name'))
 })
 
-// this function to remove existing lines, angle arc
+// this function to remove existing lines, angle arc and measurement info box
 function clearExistingLines() {
     $('#drawnLine').remove();
     $('#horizontalAxis').remove();
     $('#angleText').remove();
     $('#angleArc').remove();
+    $('#measurementInfoBox').remove();
     if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
